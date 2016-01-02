@@ -1,3 +1,3 @@
 # docker
 
-Some docker repositories
+Some docker repositories. See subdirectories. 

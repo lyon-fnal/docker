@@ -41,8 +41,8 @@ To run a container with this image, do
 
 ```bash
 docker run -t -i \
-           -v /cvmfs/gm2.opensciencegrid.org:/cvmfs/gm2.opensciencegrid.org
-           c67baseextcvmfs
+         -v /cvmfs/gm2.opensciencegrid.org:/cvmfs/gm2.opensciencegrid.org \
+         c67baseextcvmfs
 ```
 
 Add other `-v` options to make more data volumes visible. For example, on your Mac add `-v /Users:/Users` (the `/Users` shared folder is added to your docker machine VM by the docker installation).
