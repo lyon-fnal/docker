@@ -68,7 +68,7 @@ $ docker attach b9
 
 # And try another container now that nothing is running
 # It will work and note that the cache is still populated!!
-$docker run -i -t  --privileged --volumes-from cvmfsPersist  squark/c67basecvmfs
+$ docker run -i -t  --privileged --volumes-from cvmfsPersist  squark/c67basecvmfs
 CernVM-FS: running with credentials 499:497
 CernVM-FS: loading Fuse module... done
 CernVM-FS: mounted cvmfs on /cvmfs/gm2.opensciencegrid.org
