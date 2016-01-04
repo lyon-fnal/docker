@@ -1,10 +1,12 @@
-# Docker c67BaseExtCvmfs
+# c67Base
 
-Image name: c67baseextcvmfs
+Image name: squark/c67base
 
-Centos 6.7 - Base - External CVMFS
+Centos 6.7 - Base 
 
-Creates an image from centos 6.7 that installs enough packages that you can  build and run gm2 software with a release from CVMFS. CVMFS is external, that is you must run the container with the `--volume (-v)` option to see your host machine's CVMFS installation (see below for an example).
+Creates an image from centos 6.7 that installs enough packages that you can  build and run gm2 software, so long as there's a gm2 ups repository (release) somewhere on your host that the container can access. That is you must run the container with the `--volume (-v)` option pointing to the path to the gm2 ups repository. 
+
+The intended use case is to mount the ups repository on the host system via CVMFS to `/cvmfs/gm2.opensciencegrid.org` and make that accessible to the container. 
 
 If you are using a Mac, you must prepare the docker 
 virtual machine to make your host's CVMFS visible. Here's how to do this with a standard Mac docker installation (launch "Docker Quickstart Terminal")...
@@ -31,8 +33,8 @@ docker-machine ssh default
 To build this docker image, assuming you are following the git repository, do
 
 ```bash
-# Create c67baseextcvmfs
-docker build -t $(basename $PWD | tr A-Z a-z) .
+# Create squark/c67base
+docker build -t squark/$(basename $PWD | tr A-Z a-z) .
 ```
 
 The size should be approximately 536 MB. 
@@ -42,7 +44,7 @@ To run a container with this image, do
 ```bash
 docker run -t -i \
          -v /cvmfs/gm2.opensciencegrid.org:/cvmfs/gm2.opensciencegrid.org \
-         c67baseextcvmfs
+         squark/c67base
 ```
 
 Add other `-v` options to make more data volumes visible. For example, on your Mac add `-v /Users:/Users` (the `/Users` shared folder is added to your docker machine VM by the docker installation).

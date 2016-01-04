@@ -1,0 +1,10 @@
+# Pull repositories that are in /cvmfs/*.*
+CVMFS_REPOSITORIES="`echo $(ls /cvmfs | grep  '\.')|tr ' ' ,`"
+
+# Talk directly to the stratum 1 server unless overriden in domain.d files
+CVMFS_HTTP_PROXY=DIRECT
+#CVMFS_HTTP_PROXY="http://squid.fnal.gov:3128"
+
+# Expand quota (units in MB)
+CVMFS_QUOTA_LIMIT=20000
+CVMFS_CACHE_BASE=/var/cache/cvmfs
