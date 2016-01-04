@@ -1,6 +1,8 @@
 FROM squark/c67base
 MAINTAINER Adam Lyon <lyon@fnal.gov>
 
+# Following instructions from https://twiki.grid.iu.edu/bin/view/Documentation/Release3/InstallCvmfs
+
 RUN yum -y install yum-plugin-priorities
 RUN rpm -Uvh https://repo.grid.iu.edu/osg/3.3/osg-3.3-el6-release-latest.rpm
 RUN yum -y install osg-oasis
