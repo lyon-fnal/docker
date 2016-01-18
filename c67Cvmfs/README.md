@@ -1,8 +1,8 @@
 # c67BaseCvmfs
 
-Image name: squark/c67basecvmfs
+Image name: squark/c67cvmfs
 
-Centos 6.7 - Base - CVMFS
+Centos 6.7 - CVMFS
 
 Creates an image from centos 6.7 that installs enough packages that you can build and run gm2 software (see c67Base) and install/mount the gm2 CVMFS UPS repository within the container. 
 
@@ -18,7 +18,7 @@ docker build -t squark/$(basename $PWD | tr A-Z a-z) .
 To run a container with this image, do
 
 ```bash
-docker run --privileged -t -i squark/c67basecvmfs
+docker run --privileged -t -i squark/c67cvmfs
 ```
 
 Note that the container must be run with the `--privileged` flag due to the use of FUSE within the container. 
@@ -32,14 +32,14 @@ Another way to re-use a CVMFS cache is to create a "data volume container" (see 
 ```bash
 docker create -v /var/cache/cvmfs \ 
                --name cvmfsPersist \
-                squark/c67basecvmfs /bin/true
+                squark/c67cvmfs /bin/true
 ```
 
 Now start the container with,
 
 ```bash
 docker run -i -t --privileged --volumes-from cvmfsPersist \
-       squark/c67basecvmfs
+       squark/c67cvmfs
 ```
 
 If you exit the container and start it again with the same command, you will be re-using the CVMFS cache and you will find things to be very fast. 
@@ -48,7 +48,7 @@ Note that apparently you cannot run more than one container **simultaneously** a
 
 ```bash
 # Start a container in the background
-$ docker run -i -t -d --privileged --volumes-from cvmfsPersist  squark/c67basecvmfs
+$ docker run -i -t -d --privileged --volumes-from cvmfsPersist  squark/c67cvmfs
 b910f28b41bae14bd0c76d3c335d053505ab0737a2c4346718746b4c64cadd58
 
 # Watch CVMFS mount
@@ -58,7 +58,7 @@ $ docker logs -t b9
 2016-01-04T08:35:08.213760246Z CernVM-FS: mounted cvmfs on /cvmfs/gm2.opensciencegrid.org
 
 # Let's try to run another simultaneous container accessing the same CVMFS cache 
-$ docker run -i -t  --privileged --volumes-from cvmfsPersist  squark/c67basecvmfs
+$ docker run -i -t  --privileged --volumes-from cvmfsPersist  squark/c67cvmfs
 Repository gm2.opensciencegrid.org is already mounted on /cvmfs/gm2.opensciencegrid.org
 # You will not be able to mount CVMFS in this container
 
@@ -68,7 +68,7 @@ $ docker attach b9
 
 # And try another container now that nothing is running
 # It will work and note that the cache is still populated!!
-$ docker run -i -t  --privileged --volumes-from cvmfsPersist  squark/c67basecvmfs
+$ docker run -i -t  --privileged --volumes-from cvmfsPersist  squark/c67cvmfs
 CernVM-FS: running with credentials 499:497
 CernVM-FS: loading Fuse module... done
 CernVM-FS: mounted cvmfs on /cvmfs/gm2.opensciencegrid.org
