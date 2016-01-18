@@ -1,4 +1,4 @@
-# c67BaseCvmfs
+# c67Cvmfs
 
 Image name: squark/c67cvmfs
 
