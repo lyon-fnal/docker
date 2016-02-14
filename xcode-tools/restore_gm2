@@ -1,0 +1,19 @@
+# Source me
+#
+# restore_gm2 on the Mac side
+
+# restore_env -- restore the environment from a gm2.env file
+d=$PWD
+if [[ $# -eq 1 ]] ; then
+  d=$1
+fi
+
+egrep -v "^PYTHON|^HOME|^PATH|^LD_LIBRARY_PATH|^LS_COLORS|^_|^SHLVL|^USERNAME|^TERM|^PWD|^DYLD|^LANG" $d/gm2.env > /tmp/gm2_sanitized.env
+
+while read -r line; do
+  export "$line"
+done < /tmp/gm2_sanitized.env
+
+rm -f /tmp/gm2_sanitized.env
+
+echo "Environment restored: MRB_BUILDDIR=$MRB_BUILDDIR"

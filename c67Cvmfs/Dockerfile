@@ -1,19 +1,26 @@
-FROM squark/c67base
+FROM c67base
 MAINTAINER Adam Lyon <lyon@fnal.gov>
 
 # Following instructions from https://twiki.grid.iu.edu/bin/view/Documentation/Release3/InstallCvmfs
 
-RUN yum -y install yum-plugin-priorities
-RUN rpm -Uvh https://repo.grid.iu.edu/osg/3.3/osg-3.3-el6-release-latest.rpm
-RUN yum -y install osg-oasis
+USER root
+
+RUN yum -y install yum-plugin-priorities &&  \
+    rpm -Uvh https://repo.grid.iu.edu/osg/3.3/osg-3.3-el6-release-latest.rpm && \
+    yum -y install osg-oasis && \
+    yum clean all
 
 RUN echo "user_allow_other" > /etc/fuse.conf
 
 COPY osg_cvmfs_default.local /etc/cvmfs/default.local
-COPY start.sh /usr/local/bin 
-
 RUN mkdir /cvmfs/gm2.opensciencegrid.org
+COPY startCvmfs.sh /usr/local/bin
+
+USER gm2
+COPY gm2_fcns.sh /home/gm2
+RUN echo "source /home/gm2/gm2_fcns.sh" >> .bashrc
 
 # Mount CVMFS on entry
 # (See http://www.markbetz.net/2014/03/17/docker-run-startup-scripts-then-exit-to-a-shell/)
-CMD bash -C '/usr/local/bin/start.sh';'bash' 
+# The -C means to prevent output redirection from overwriting files
+CMD bash -C "/usr/local/bin/startCvmfs.sh";"bash"

@@ -1,0 +1,52 @@
+# Source me
+
+# Things it should do
+#   Set up the docker-machine
+#   Load the g-2 environment
+#   Start the docker container
+#   Launch Xcode in background
+
+# Arguments
+#  $1 = docker-machine
+#  #2 = Development area
+
+# TODO - Do the below a better way
+DOCKERGM2HOME=/Users/lyon/Development/docker-gm2
+
+# Docker machine
+# TODO make optional - see below
+machine=$1
+
+# Top of dev area
+devArea=$2
+
+# Load the docker-machine
+# TODO - What if no docker machines? What if already set up? What if only one?
+#        What if down?
+eval $(docker-machine env $machine)
+
+# Load the g-2 environment ON THE MAC from the gm2.env file
+# TODO What if build is missing; what if gm2.env is missing?
+source $DOCKERGM2HOME/xcode-tools/restore_gm2 $devArea/build_slf6.x86_64
+
+# Set up X11 -- if xterm pops up do, defaults write org.macosforge.xquartz.X11 app_to_run /usr/bin/true
+#               To change back do /opt/X11/bin/xterm
+open -a Xquartz.app
+
+# Is socat running?
+if ps -ef | grep socat | grep -q -v grep ; then
+  # Socat is running
+  echo "socat X11 capture is already running"
+else
+  echo 'Running socat X11 capture -- to stop do killall socat'
+  socat TCP-LISTEN:6000,reuseaddr,fork UNIX-CLIENT:\"$DISPLAY\" &
+fi
+
+# Determine the X11 address
+if ifconfig | grep -q bridge100 ; then
+  # We have Xhyve and bridge100
+  export DOCKER_X11_IP=$(ifconfig bridge100  | grep inet | awk '{print $2}')
+else
+  # TODO figure out what to do for vb
+  export DOCKER_X11_IP="UNKNOWN"
+fi

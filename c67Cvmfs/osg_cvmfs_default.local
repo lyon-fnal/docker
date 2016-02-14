@@ -8,3 +8,4 @@ CVMFS_HTTP_PROXY=DIRECT
 # Expand quota (units in MB)
 CVMFS_QUOTA_LIMIT=20000
 CVMFS_CACHE_BASE=/var/cache/cvmfs
+CVMFS_NFS_SOURCE=yes
