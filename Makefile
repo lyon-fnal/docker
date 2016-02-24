@@ -1,4 +1,4 @@
-# Makefile to run docker stuff
+	# Makefile to run docker stuff
 #  This is a generic Makefile to run our different images
 #
 
@@ -8,6 +8,8 @@
 LOCAL_VOLUME ?= /Users
 DOCKER_HISTORY_FILE ?= $(PWD)/docker_bash_history
 NAME ?= gm2
+DOCKER_MACHINE_NAME ?= xhyve
+BUILD_ARGS ?=
 
 ARGS_RM := --rm
 ARGS_BKG :=
@@ -33,6 +35,7 @@ help-top:
 	@echo ' make build-all -- Build all of the images (must be run from docker-gm2 top level dir)'
 	@echo ' '
 	@echo ' make create-machine-xhyve -- Build an xhyve VM on OSX (see https://goo.gl/q4WTCd)'
+	@echo ' make create-machine-vbox  -- Create a virtualbox VM on OSX'
 	@echo ' make fix-clock-skew-xhyve -- Resync the clock on the xhyve VM - fixes clock skew errors'
 	@echo
 	@echo '   Options in front of shell...'
@@ -47,7 +50,7 @@ check-image-is-set:
 	fi
 
 do-build: check-image-is-set
-	docker build -t $(IMAGE) .
+	docker build $(BUILD_ARGS) -t $(IMAGE) .
 
 do-bash-history:
 	# We need to create the history file, else docker run makes it a directory
@@ -62,9 +65,11 @@ do-x11:
 	$(eval DID_X11 := yes)
 	$(eval BRIDGE100IP := $(shell ifconfig bridge100  | grep inet | cut -d' ' -f 2))
 	$(eval ARGS_DISPLAY := -e DISPLAY=$(BRIDGE100IP):0)
+	$(eval DOCKER_VM_IP := $(shell docker-machine ip $(DOCKER_MACHINE_NAME) ))
 	-killall socat
 	open -a Xquartz
-	socat TCP-LISTEN:6000,reuseaddr,fork UNIX-CLIENT:\"$$DISPLAY\" &
+	socat TCP-LISTEN:6000,reuseaddr,fork,range=$(DOCKER_VM_IP):255.255.255.0 UNIX-CLIENT:\"$$DISPLAY\" &
+	# Must set the range option, else our port 6000 is open to everybody!
 
 do-docker-run: check-image-is-set
 	# Run the container
@@ -122,6 +127,13 @@ create-machine-xhyve :
 		--xhyve-cpu-count=8 \
 		--xhyve-memory-size=8192 \
 		xhyve
+
+# Create the virtualbox machine
+create-machine-vbox :
+	docker-machine create --driver virtualbox \
+	 	--virtualbox-cpu-count=8 \
+		--virtualbox-memory=8192 \
+		vbox
 
 # Fix clock-skew errors
 fix-clock-skew-xhyve :

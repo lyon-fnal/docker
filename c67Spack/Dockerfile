@@ -12,6 +12,7 @@ RUN yum -y update && \
                    perl-CPAN gettext curl-devel && \
     yum -y install epel-release && \
     yum -y install tcl lua-devel lua-filesystem lua-posix && \
+    yum -y install libXft-devel && \
     yum clean all
 
 WORKDIR /home/root
@@ -31,7 +32,7 @@ RUN wget -O Lmod-6.1.tar.bz2 http://sourceforge.net/projects/lmod/files/Lmod-6.1
     cd Lmod-6.1 && \
     ./configure --prefix=/usr/local && \
     make install && \
-    rm -rf Lmod-6.1 Lmod-6.1.tar.bz2 
+    rm -rf Lmod-6.1 Lmod-6.1.tar.bz2
 
 USER gm2
 WORKDIR /home/gm2
