@@ -82,7 +82,7 @@ The following are options and can be added before `shell` in combinations (e.g. 
 your User and Group IDs that you have on your host machine (that way files written by the docker container
 will have the correct ownership).
 
-- `/Users` is accessible from the container as `/Users`. Since the `gm2` user has the same UID/GID as the host, files you write from within the container are accessible by the host too. Having the paths the same makes it easy to share source files between an IDE running in the host and building that code within the container. You can set a different directory to be accessible as that path by overriding `$LOCAL_VOLUME`. Note that the volume must be accessible by the docker VM if applicable (e.g. Mac/Windows).
+- Your `$HOME` on the host is accessible from within the container as the same path. Since the `gm2` user has the same UID/GID as the host, files you write from within the container to that directory (and subdirectories) are accessible by the host too. Having the paths the same makes it easy to share source files between an IDE running in the host and building that code within the container. You can set a different directory to be accessible as that path by overriding `$LOCAL_VOLUME`. Note that the volume must be accessible by the docker VM if applicable (e.g. Mac/Windows).
 
 - The `/home/gm2/.bash_history` file is mirrored on the host as `$PWD/docker_bash_history`. That way your bash command history can live between calls to `make shell`. You can change the name and path of the command history file on the host side by setting `$DOCKER_HISTORY_FILE`.
 

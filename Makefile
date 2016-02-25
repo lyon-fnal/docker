@@ -5,7 +5,7 @@
 
 .PHONY: help bkg x11 shell
 
-LOCAL_VOLUME ?= /Users
+LOCAL_VOLUME ?= $(HOME)
 DOCKER_HISTORY_FILE ?= $(PWD)/docker_bash_history
 NAME ?= gm2
 DOCKER_MACHINE_NAME ?= xhyve
@@ -17,6 +17,13 @@ ARGS_DISPLAY :=
 ARGS_PRIVILEGED :=
 ARGS_CVMFS :=
 
+DM_DRIVER := $(shell docker-machine inspect --format='{{.DriverName}}' ${DOCKER_MACHINE_NAME})
+NETWORK_INTERFACE := unknown
+ifeq ($(DM_DRIVER),xhyve)
+NETWORK_INTERFACE := bridge100
+else ifeq ($(DM_DRIVER),virtualbox)
+NETWORK_INTERFACE := vboxnet0
+endif
 
 # ----------------------
 
@@ -63,8 +70,8 @@ do-bkg:
 
 do-x11:
 	$(eval DID_X11 := yes)
-	$(eval BRIDGE100IP := $(shell ifconfig bridge100  | grep inet | cut -d' ' -f 2))
-	$(eval ARGS_DISPLAY := -e DISPLAY=$(BRIDGE100IP):0)
+	$(eval MYHOSTIP := $(shell ifconfig $(NETWORK_INTERFACE)  | grep inet | cut -d' ' -f 2))
+	$(eval ARGS_DISPLAY := -e DISPLAY=$(MYHOSTIP):0)
 	$(eval DOCKER_VM_IP := $(shell docker-machine ip $(DOCKER_MACHINE_NAME) ))
 	-killall socat
 	open -a Xquartz
@@ -134,6 +141,8 @@ create-machine-vbox :
 	 	--virtualbox-cpu-count=8 \
 		--virtualbox-memory=8192 \
 		vbox
+	VBoxManage showextradata "vbox" "VBoxInternal2/SavestateOnBatteryLow" 0
+# Do not stop the VM on low battery warning
 
 # Fix clock-skew errors
 fix-clock-skew-xhyve :

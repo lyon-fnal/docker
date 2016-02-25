@@ -27,11 +27,11 @@ ENV UPS_OVERRIDE $UPS_FLAVOR_OVERRIDE
 # Create a gm2 user (UID and GID should match the Mac user), add to suoders, and switch to it
 ENV USERNAME gm2
 
-# Pass in the user ID and the group ID to use
+# Pass in the user ID :and the group ID to use
 ARG MYUID
-ENV MYUID ${MYUID:-502}
+ENV MYUID ${MYUID:-1000}
 ARG MYGID
-ENV MYGID ${MYGID:-20}
+ENV MYGID ${MYGID:-100}
 
 RUN useradd -u $MYUID -g $MYGID -ms /bin/bash $USERNAME && \
       echo "$USERNAME ALL=(ALL)   NOPASSWD:ALL" >> /etc/sudoers
