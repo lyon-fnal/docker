@@ -17,8 +17,6 @@ RUN mkdir /cvmfs/gm2.opensciencegrid.org
 COPY startCvmfs.sh /usr/local/bin
 
 USER gm2
-COPY gm2_fcns.sh /home/gm2
-RUN echo "source /home/gm2/gm2_fcns.sh" >> .bashrc
 
 # Mount CVMFS on entry
 # (See http://www.markbetz.net/2014/03/17/docker-run-startup-scripts-then-exit-to-a-shell/)
