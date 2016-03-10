@@ -11,4 +11,5 @@
 #   to be a gm2.env file there
 
 # Execute in the container (use bash -l to load .bashrc)
-docker exec $1 bash -c -l "cd $PWD ; restore_gm2 ; ninja"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+docker exec $1 bash -c -l "source $DIR/gm2_fcns.sh ; cd $PWD ; restore_gm2 ; ninja"

@@ -11,6 +11,7 @@ RUN yum update -y && \
           perl expat-devel glibc-devel gdb git \
           freetype-devel libXpm-devel libXmu-devel mesa-libGL-devel mesa-libGLU-devel \
           libjpeg libpng \
+          tar zip xz bzip2 patch \
           wget sudo krb5-workstation && \
     yum clean all
 

@@ -8,7 +8,7 @@ USER root
 #  perl-CPAN... for new git
 #  epel-release, tcl, lua-devel... for lmod
 RUN yum -y update && \
-    yum -y install gcc gcc-gfortran gcc-c++ m4 bison tar zip xz bzip2 patch svn \
+    yum -y install gcc gcc-gfortran gcc-c++ m4 bison svn \
                    perl-CPAN gettext curl-devel && \
     yum -y install epel-release && \
     yum -y install tcl lua-devel lua-filesystem lua-posix && \

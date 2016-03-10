@@ -28,4 +28,4 @@ allinea: do-allinea
 
 help: help-top help-cvmfs help-allinea
 
-include ../c67Cvmfs/Makefile
+include ../c67CvmfsNfsClient/Makefile
