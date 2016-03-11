@@ -20,6 +20,8 @@ ARGS_BKG ?=
 ARGS_DISPLAY ?=
 ARGS_PRIVILEGED ?=
 
+GRAFANA_DIR ?= $(PWD)/runtime/grafana
+
 # Deal with differences in the docker-machine (virtualbox vs xhyve)
 ifdef DOCKER_MACHINE_NAME
 DM_DRIVER := $(shell docker-machine inspect --format='{{.DriverName}}' ${DOCKER_MACHINE_NAME})
@@ -287,8 +289,10 @@ monitoring:
 		-storage_driver_db=cadvisor \
 		-storage_driver_host=influxsrv:8086
 
+	docker run -d -v /var/lib/grafana -v /Users:/Users --name grafana-storage busybox:latest cp $(PWD)/grafana/grafana.db /var/lib/grafana
+
 	# Grafana displays the monitoring data
-	docker run -d -p 3000:3000 \
+	docker run -d \
 		-e HTTP_USER=admin \
 		-e HTTP_PASS=admin \
 		-e INFLUXDB_HOST=localhost \
@@ -298,16 +302,19 @@ monitoring:
 		-e INFLUXDB_PASS=root \
 		--link=influxsrv:influxsrv  \
 		--name=grafana \
-		-v $(PWD)/grafana.db:/var/lib/grafana/grafana.db \
-		-v /Users:/Users \
+		--volumes-from grafana-storage \
+		-p 3000:3000 \
 		grafana/grafana
 
 	@echo Look at instananeous monitoring from CAdivsor on port 9090
 	@echo Look at historical monitoring on port 3000
 
 monitoring-stop:
-	docker stop influxsrv cadvisor grafana
-	docker rm influxsrv cadvisor grafana
+	-docker stop influxsrv cadvisor grafana grafana-storage
+	-docker rm influxsrv cadvisor grafana grafana-storage
+
+monitoring-grafana-save-config:
+	docker exec grafana cp /var/lib/grafana/grafana.db $(PWD)/grafana/grafana.db
 
 check-archive-is-set:
 	@if [ -z $(ARCHIVE) ] ; then \
