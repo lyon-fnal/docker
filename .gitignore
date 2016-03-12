@@ -1,8 +1,7 @@
 # Ignore these files...
 
 *bash_history
-allinea_license*
 
-# These directories are not ready for committal
-c67BaseCvmfsExtQtCreator/
-c67NfsSrvCvmfs/
+runtime/*
+
+allinea_license*

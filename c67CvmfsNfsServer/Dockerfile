@@ -7,8 +7,9 @@ RUN yum -y install nfs-utils nfs-utils-lib && \
     yum clean all
 
 COPY startCvmfsNfsServer.sh /usr/local/bin
+COPY etc_sysconfig_nfs /etc/sysconfig/nfs
 
-EXPOSE 111 2049
+EXPOSE 111/udp 2049/udp 892/udp 662/udp 32769/udp 32803/tcp
 
 USER gm2
 

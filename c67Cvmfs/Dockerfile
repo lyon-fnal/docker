@@ -14,6 +14,7 @@ RUN echo "user_allow_other" > /etc/fuse.conf
 
 COPY osg_cvmfs_default.local /etc/cvmfs/default.local
 RUN mkdir /cvmfs/gm2.opensciencegrid.org
+RUN mkdir /cvmfs/fermilab.opensciencegrid.org
 COPY startCvmfs.sh /usr/local/bin
 
 USER gm2

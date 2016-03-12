@@ -12,6 +12,7 @@ NAME ?= aContainer
 DOCKER_HISTORY_FILE ?= $(PWD)/docker_bash_history_$(NAME)
 BUILD_ARGS ?=
 EXTRA_DOCKER_RUN_FLAGS ?=
+EXTRA_RUN_INSTRUCTIONS ?=
 VOL ?= /home/gm2/$(NAME)
 VOLS_FROM ?=
 
@@ -145,6 +146,7 @@ do-docker-run: check-image-is-set
 		$(EXTRA_DOCKER_RUN_FLAGS) \
 		$(IMAGE) \
 		$(CMD)
+	@echo $(EXTRA_DOCKER_RUN_INSTRUCTIONS)
 
 do-post-run:
 	@if [ -n "$(DID_BKG)" ] ; then \
@@ -198,6 +200,9 @@ allinea-shell:
 
 igprof-shell:
 	$(MAKE) -C c67Igprof x11 shell
+
+ps:
+	@docker ps -sa --format "table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.RunningFor}} ago\t{{.Image}}\t{{.Labels}}"
 
 # ---- Making machines
 
