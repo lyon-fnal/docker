@@ -1,0 +1,42 @@
+url = "http://atsd:8088"             #ATSD server http/https endpoint
+write_host = "atsd:8081"             #ATSD server TCP/UDP destination, formatted as host:port
+write_protocol = "tcp"               #transfer protocol. Possible settings: http, https, udp, tcp
+connection_limit = 1                 #ATSD storage driver TCP connection count
+memstore_limit = 1000000             #maximum number of series commands stored in buffer until flush
+
+#Specify optional deduplication settings for a metric group.
+#[deduplication.groupName] - Metric group to which the setting applies. Supported metric groups in cAdvisor: cpu, memory, io, network, task, filesystem
+#interval - Maximum delay between the current and previously sent samples. If exceeded, the current sample is sent to ATSD regardless of the specified threshold.
+#threshold - Absolute or percentage difference between the current and previously sent sample values. If the absolute difference is within the threshold and elapsed time is within Interval, the value is discarded.
+
+[deduplication]
+   [deduplication.cpu]
+   interval = "2s"
+   threshold = "2"
+
+   [deduplication.io]
+   interval = "2s"
+   threshold = "0.5%"
+
+   [deduplication.memory]
+   interval = "2s"
+   threshold = "0.5%"
+
+   [deduplication.network]
+   interval = "2s"
+   threshold = "0.5%"
+
+   [deduplication.task]
+   interval = "15s"
+   threshold = "1%"
+
+   [deduplication.filesystem]
+   interval = "15s"
+   threshold = "1%"
+
+[cadvisor]
+store_major_numbers  = false       #store statistics for devices with all available major numbers
+store_user_cgroups   = false       #store statistics for "user" cgroups (for example: docker-host/user.*)
+property_interval    = "20s"        #container property update interval. Should be &gt;= housekeeping_interval
+sampling_interval    = "1s"        #interval at which series data is sampled. By default set to housekeeping_interval. Should be &gt;= housekeeping_interval
+docker_host          = "dinghy"    #hostname of the machine where docker daemon is running. By default set to 'docker-host'. Needs to be set manually because cadvisor container doesn't know hostname of the docker machine.
