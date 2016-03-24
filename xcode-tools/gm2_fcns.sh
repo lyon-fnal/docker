@@ -15,14 +15,6 @@ restore_gm2 () {
   echo "Environment restored: MRB_BUILDDIR=$MRB_BUILDDIR"
 }
 
-# Set the environment - change .bashrc to load gm2.env
-autoenv_gm2 () {
-  d=$PWD
-  if [[ $# -eq 1 ]] ; then
-    d=$1
-  fi
-  echo "restore_gm2 $d" >> ~/.bashrc
-}
 
 # capture_gm2 -- capture the environment - write to gm2.env file
 capture_gm2 () {
@@ -30,7 +22,6 @@ capture_gm2 () {
         egrep -v '^}$'  > gm2.env
 
   echo "Wrote environment to gm2.env"
-  autoenv_gm2
 }
 
 # setup_gm2 --- setup an existing environment

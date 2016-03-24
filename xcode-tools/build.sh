@@ -5,7 +5,7 @@
 #   The docker-machine environment must already be set
 #
 # Arguments
-#   $1 = Name of the c67cvmfs container
+#   $1 = Name of the container
 #
 #   The current directory should be the build area; there needs
 #   to be a gm2.env file there

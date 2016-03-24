@@ -5,7 +5,7 @@
 #   The docker-machine environment must already be set
 #
 # Arguments
-#   $1 = Name of the c67cvmfs container
+#   $1 = Name of the container
 #   $2 = Directory to run in
 #   $@ = More Arguments
 #
@@ -13,8 +13,9 @@
 #   to be a gm2.env file there
 
 container=$1
-dir=$2
+rundir=$2
 shift ; shift
 
 # Execute in the container (use bash -l to load .bashrc)
-docker exec $container bash -c -l "cd $PWD ; restore_gm2 ;  cd $dir ; gm2 $@"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+docker exec $container bash -c -l "source $DIR/gm2_fcns.sh ; cd $PWD ; restore_gm2 ;  cd $rundir ; gm2 $@"
