@@ -55,7 +55,7 @@ help-top:
 	@echo ' '
 	@echo 'HIGHER ORDER FUNCTIONS:'
 	@echo ' '
-	@echo ' make cvmfs-server   -- Start the CVMFS server to supply cvmfs to other clients'
+	@echo ' make cvmfs-start    -- Start the CVMFS server to supply cvmfs to other clients'
 	@echo ' make dev-shell      -- Make a development shell container that gets CVMFS, X11'
 	@echo ' make allinea-shell  -- Make a development shell container that gets CVMFS, X11 and Allinea'
 	@echo ' make igprof-shell   -- Make a development shell container that gets CVMFS, X11 and Igprof'
@@ -104,11 +104,11 @@ help-machines:
 	@echo 'Set NEW_DOCKER_MACHINE_NAME accordingly. Default is "default"'
 
 help-monitoring:
-	make -C monitoring help-monitoring
+	make -C monitoring-axibase help-monitoring
 
 # ---- Higher order functionality
 
-cvmfs-server:
+cvmfs-start:
 	make -C c67CvmfsNfsServer cvmfs bkg shell
 
 dev-shell:

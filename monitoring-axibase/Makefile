@@ -24,7 +24,7 @@ monitoring-start:
 	  --volume=/var/run:/var/run:rw \
 	  --volume=/sys:/sys:ro \
 	  --volume=/var/lib/docker/:/var/lib/docker:ro \
-	  --volume=$(PWD):/root \
+	  --volume=$(CURDIR):/root \
 	  --publish=9090:8080 \
 	  --detach=true \
 	  --name=cadvisor \
@@ -42,6 +42,3 @@ monitoring-start:
 monitoring-stop:
 	-docker stop atsd cadvisor
 	-docker rm atsd cadvisor
-
-monitoring-grafana-save-config:
-	docker exec grafana cp /var/lib/grafana/grafana.db $(PWD)/grafana/grafana.db
