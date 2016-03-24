@@ -1,13 +1,11 @@
-FROM c67base
+FROM lyonfnal/c67base
 MAINTAINER Adam Lyon <lyon@fnal.gov>
 
 # Following instructions from https://twiki.grid.iu.edu/bin/view/Documentation/Release3/InstallCvmfs
 
 USER root
 
-RUN yum -y install yum-plugin-priorities &&  \
-    rpm -Uvh https://repo.grid.iu.edu/osg/3.3/osg-3.3-el6-release-latest.rpm && \
-    yum -y install osg-oasis && \
+RUN yum -y install osg-oasis && \
     yum clean all
 
 RUN echo "user_allow_other" > /etc/fuse.conf
