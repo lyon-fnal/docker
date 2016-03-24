@@ -1,4 +1,4 @@
-IMAGE ?= c67base
+IMAGE ?= lyonfnal/c67base
 NAME ?= c67base
 
 # Set the build arguments (MYUID and MYGID)

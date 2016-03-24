@@ -12,11 +12,26 @@ RUN yum update -y && \
           freetype-devel libXpm-devel libXmu-devel mesa-libGL-devel mesa-libGLU-devel \
           libjpeg libpng \
           tar zip xz bzip2 patch \
-          wget sudo krb5-workstation && \
+          wget emacs which sudo strace && \
+    yum clean all
+
+# Get our kerberos
+COPY slf.repo /etc/yum.repos.d/slf.repo
+RUN wget http://ftp.scientificlinux.org/linux/fermi/slf6.7/x86_64/os/RPM-GPG-KEY-sl && \
+    rpm --import RPM-GPG-KEY-sl && \
+    rm -f RPM-GPG-KEY-sl && \
+    yum install -y krb5-fermi-getcert --enablerepo=slf && \
     yum clean all
 
 # Install the Fermilab krb5.conf
 RUN wget http://computing.fnal.gov/authentication/krb5conf/Linux/krb5.conf -O /etc/krb5.conf
+
+# Install the OSG client
+RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm && \
+    yum install -y yum-plugin-priorities && \
+    rpm -Uvh https://repo.grid.iu.edu/osg/3.3/osg-3.3-el6-release-latest.rpm && \
+    yum install -y osg-wn-client && \
+    yum clean all
 
 # UPS gets the flavor of the machine running docker instead of the docker container.
 #   We can force the correct flavor with UPS_OVERRIDE
