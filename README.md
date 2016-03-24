@@ -1,10 +1,40 @@
-# docker-gm2
+# Docker for HEP Code Development and Analysis
 
-This repository is the source for docker images useful for code development and execution at the Muon *g-2* experiment (and likely others).
+**Abstract:** Development and execution environments are difficult to create and maintain. The traditional (old) way of using a machine configured by administrators or yourself is giving way to more agile environments, of which the current state-of-the-art are software *containers*. *Docker* is the most popular implementation of a container system. This document and repository offer an environment for Muon *g-2* development and execution using Docker containers allowing for ease of setup, reproducibility, and compatibility on practically any modern host computer. 
 
-## Introduction
+## The problem
 
-The images are below. See the subdirectory for more information - click on the image name to jump...
+The vast majority of current HEP computing resources, that is Grid resources, run Scientific Linux Version 6 (SL6). Fermilab offers a cluster of SLF6 (the Fermilab variant of SL) interactive nodes that may be used for code development and testing.  Such shared nodes are a good resource, but for many they are inconvenient. Many of us have powerful laptop machines or machines at the home institution that could be used for development and testing of HEP code. In general, most non-worker/non-server nodes do not run SL6 as it does not offer a compelling user-experience. Rather, Mac OSX and Ubuntu are found on most of our personal machines along with a few running Microsoft Windows. Creating and maintaining a development/testing environment for HEP experiment code (e.g. Muon *g-2* code) on such systems varies in difficulty from hard to impossible. 
+
+* Ubuntu is Linux like SL, but uses a set of system libraries and tools that are different or at different versions than those used by SL6. 
+
+* Apple's Mac OSX is a variant of Unix that is similar to Linux, but with very significant differences. 
+
+* Microsoft Windows is not like Linux at all, and though there are applications like Cygwin that add Linux-like compatibility, they are not for the faint-of-heart. 
+
+The *art* Framework team tries to mitigate some of these problems by delivering a near-complete set of applications and tools needed to build and run *art* based code on SL6 and MacOS. But there are caveats for non-SL development. 
+
+* Ubuntu: Some users have been able to build the *art* tools on Ubuntu, making a development environment there for HEP code. But Ubuntu is not supported by the art team. 
+
+* Mac OSX: With non-trivial effort, the art team has made Mac builds of *art* tools and dependencies, so Macs could be used for development. But new security restrictions in Mac OSX 11 (El Capitan) irreversibly breaks that work.
+
+* Windows: Since Windows is so different from Linux, no attempts have been made to use such machines for HEP code development. 
+
+For the systems above where HEP development is possible, build products (executables and libraries) are not compatible with SL6 systems. To run on the Grid, one must reproduce the development environment on a genuine SL6 node and build there to produce Grid compatible software. 
+
+In a nutshell, the problem is how to use a non-Scientific Linux machine (desktop, laptop, node at home institution) to develop, build and test HEP experiment code. 
+
+## Possible solutions
+
+A class of solutions involves somehow running Scientific Linux on a non-SL laptop, desktop, or other machine (this machine is called the *host*). Running both the host OS and SL simultaneously is a strategy that combines the advantages of the host machine OS with developing, building and testing HEP experiment code on the OS compatible with the Grid. A hybrid system may even allow the use of some development tools on the host (e.g. an IDE) that act on builds with SL. 
+
+
+
+
+
+# Old stuff
+
+* The images are below. See the subdirectory for more information - click on the image name to jump...
 
 - [c67base](c67Base/README.md) - An image based off of Centos 6.7 (equivalent to Scientific Linux 6) with enough dependencies installed to run g-2 code, pop an X window, run git, and get a Kerberos ticket.
 
@@ -18,6 +48,7 @@ The images are below. See the subdirectory for more information - click on the i
 
 To build all of the docker images in this repository and spin
 up a cvmfs container, do...
+
 ```bash
 # Checkout the repository
 cd somewhere
