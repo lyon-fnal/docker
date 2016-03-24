@@ -1,4 +1,4 @@
-IMAGE ?= c67igprof
+IMAGE ?= lyonfnal/c67igprof
 NAME ?= c67igprof
 
 # We need to add the license directory

@@ -3,7 +3,7 @@
 #
 
 
-.PHONY: help bkg x11 shell
+.PHONY: help bkg x11 shell monitoring
 
 NEW_DOCKER_MACHINE_NAME ?= default
 
@@ -103,6 +103,41 @@ help-machines:
 	@echo ' '
 	@echo 'Set NEW_DOCKER_MACHINE_NAME accordingly. Default is "default"'
 
+help-monitoring:
+	make -C monitoring help-monitoring
+
+# ---- Higher order functionality
+
+cvmfs-server:
+	make -C c67CvmfsNfsServer cvmfs bkg shell
+
+dev-shell:
+	make -C c67CvmfsNfsClient x11 shell
+
+single-analysis-shell:
+	make -C c67CvmfsNfsClient EXTRA_DOCKER_RUN_FLAGS="--memory=1g" x11 shell
+
+plain-shell:
+	make -C c67Base x11 shell
+
+allinea-shell:
+	make -C c67Allinea allinea x11 shell
+
+igprof-shell:
+	make -C c67Igprof x11 shell
+
+clion-shell:
+	make -C clion x11 shell
+
+monitoring:
+	make -C monitoring-axibase monitoring-start
+
+monitoring-stop:
+	make -C monitoring-axibase monitoring-stop
+
+ps:
+	@docker ps -sa --format "table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.RunningFor}} ago\t{{.Image}}"
+
 
 # ---- Internal Targets ----
 check-image-is-set:
@@ -181,40 +216,17 @@ shell: | do-bash-history do-docker-run do-post-run
 
 clean: | do-clean-recent-container do-kill-socat
 
-# ---- Higher order functionality
-
-cvmfs-server:
-	$(MAKE) -C c67CvmfsNfsServer cvmfs bkg shell
-
-dev-shell:
-	$(MAKE) -C c67CvmfsNfsClient x11 shell
-
-single-analysis-shell:
-	$(MAKE) -C c67CvmfsNfsClient EXTRA_DOCKER_RUN_FLAGS="--memory=1g" x11 shell
-
-plain-shell:
-	$(MAKE) -C c67Base x11 shell
-
-allinea-shell:
-	$(MAKE) -C c67Allinea allinea x11 shell
-
-igprof-shell:
-	$(MAKE) -C c67Igprof x11 shell
-
-ps:
-	@docker ps -sa --format "table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.RunningFor}} ago\t{{.Image}}\t{{.Labels}}"
-
 # ---- Making machines
 
 # Build all of the images
 build-all:
-	$(MAKE) -C c67Base build
-	$(MAKE) -C c67Cvmfs build
-	$(MAKE) -C c67CvmfsNfsServer build
-	$(MAKE) -C c67CvmfsNfsClient build
-	$(MAKE) -C c67Allinea build
-	$(MAKE) -C c67Igprof build
-	$(MAKE) -C c67Spack build
+	make -C c67Base build
+	make -C c67Cvmfs build
+	make -C c67CvmfsNfsServer build
+	make -C c67CvmfsNfsClient build
+	make -C c67Igprof build
+#	make -C c67Allinea build
+#	make -C c67Spack build
 
 # Create the Xhyve VM (for OSX with xhyve installed)
 create-machine-xhyve :
@@ -232,13 +244,15 @@ create-machine-vbox :
 		--virtualbox-dns-proxy \
 		--virtualbox-host-dns-resolver \
 		$(NEW_DOCKER_MACHINE_NAME)
+	# Do not stop the VM on low battery warning
+	VBoxManage setextradata "$(NEW_DOCKER_MACHINE_NAME)" "VBoxInternal2/SavestateOnBatteryLow" 0
 
 # Create the virtualbox machine
 create-machine-vbox-vdi : create-machine-vbox
 	# We're going to make some adjustments to the VM, so power down
 	docker-machine stop "$(NEW_DOCKER_MACHINE_NAME)"
-	# Do not stop the VM on low battery warning
-	VBoxManage setextradata "$(NEW_DOCKER_MACHINE_NAME)" "VBoxInternal2/SavestateOnBatteryLow" 0
+	# Turn on DNS proxying so we don't lose DNS when the host changes networks
+	VBoxManage modifyvm "$(NEW_DOCKER_MACHINE_NAME)" --natdnsproxy1 on
 	# Convert the vmdk disk to vdi so we can shrink it later
 	# Note - since cd happens in a subshell, we need to && things
 	cd $$(docker-machine inspect --format '{{.HostOptions.AuthOptions.StorePath}}' $(NEW_DOCKER_MACHINE_NAME)) && VBoxManage clonehd --format vdi disk.vmdk disk.vdi
@@ -267,59 +281,6 @@ shrink-disk-vbox:
 # Fix clock-skew errors
 fix-clock-skew-xhyve :
 	docker-machine ssh $(DOCKER_MACHINE_NAME) "sudo date -u -D %s --set $(shell date -u +%s)"
-
-# Monitoring
-help-monitoring:
-	@echo '  make monitoring         -- Turn on monitoring'
-	@echo '  make monitoring-stop    -- Turn off monitoring'
-
-monitoring:
-	# InfluxDB stores the monitoring data
-	docker run -d -p 8083:8083 -p 8086:8086 --expose 8090 --expose 8099 \
-						 -e PRE_CREATE_DB=cadvisor \
-						 --name influxsrv tutum/influxdb
-
-	# Cadvisor collects the monitoring data
-	docker run \
-		--volume=/:/rootfs:ro \
-		--volume=/var/run:/var/run:rw \
-		--volume=/sys:/sys:ro \
-		--volume=/var/lib/docker/:/var/lib/docker:ro \
-		--publish=9090:8080 \
-		--link=influxsrv:influxsrv  \
-		--detach=true \
-		--name=cadvisor \
-		google/cadvisor \
-		-storage_driver=influxdb \
-		-storage_driver_db=cadvisor \
-		-storage_driver_host=influxsrv:8086
-
-	docker run -d -v /var/lib/grafana -v /Users:/Users --name grafana-storage busybox:latest cp $(PWD)/grafana/grafana.db /var/lib/grafana
-
-	# Grafana displays the monitoring data
-	docker run -d \
-		-e HTTP_USER=admin \
-		-e HTTP_PASS=admin \
-		-e INFLUXDB_HOST=localhost \
-		-e INFLUXDB_PORT=8086 \
-		-e INFLUXDB_NAME=cadvisor \
-		-e INFLUXDB_USER=root \
-		-e INFLUXDB_PASS=root \
-		--link=influxsrv:influxsrv  \
-		--name=grafana \
-		--volumes-from grafana-storage \
-		-p 3000:3000 \
-		grafana/grafana
-
-	@echo Look at instananeous monitoring from CAdivsor on port 9090
-	@echo Look at historical monitoring on port 3000
-
-monitoring-stop:
-	-docker stop influxsrv cadvisor grafana grafana-storage
-	-docker rm influxsrv cadvisor grafana grafana-storage
-
-monitoring-grafana-save-config:
-	docker exec grafana cp /var/lib/grafana/grafana.db $(PWD)/grafana/grafana.db
 
 check-archive-is-set:
 	@if [ -z $(ARCHIVE) ] ; then \

@@ -1,4 +1,4 @@
-FROM c67base
+FROM lyonfnal/c67base
 MAINTAINER Adam Lyon <lyon@fnal.gov>
 
 USER root

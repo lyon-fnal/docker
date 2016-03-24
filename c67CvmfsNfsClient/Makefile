@@ -1,4 +1,4 @@
-IMAGE ?= c67cvmfsnfsclient
+IMAGE ?= lyonfnal/c67cvmfsnfsclient
 NAME ?= cvmfs_nfs_client
 
 ARGS_PRIVILEGED := --privileged

@@ -1,6 +1,6 @@
 # Build a docker image with the igprof profiler
 
-FROM c67cvmfsnfsclient
+FROM lyonfnal/c67cvmfsnfsclient
 
 MAINTAINER Adam Lyon <lyon@fnal.gov>
 

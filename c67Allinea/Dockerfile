@@ -1,6 +1,6 @@
 # Build a docker image with the Allinea Forge debugger/profiler
 
-FROM c67cvmfsnfsclient
+FROM lyonfnal/c67cvmfsnfsclient
 
 MAINTAINER Adam Lyon <lyon@fnal.gov>
 

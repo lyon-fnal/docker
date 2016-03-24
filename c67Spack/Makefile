@@ -1,4 +1,4 @@
-IMAGE ?= c67spack
+IMAGE ?= lyonfnal/c67spack
 NAME ?= c67spack
 
 MY_SPACK_AREA ?= /Users/$(USER)/Development/spack

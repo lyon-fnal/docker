@@ -1,4 +1,4 @@
-FROM c67cvmfs
+FROM lyonfnal/c67cvmfs
 MAINTAINER Adam Lyon <lyon@fnal.gov>
 
 USER root

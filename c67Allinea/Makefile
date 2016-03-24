@@ -1,4 +1,4 @@
-IMAGE ?= c67allinea
+IMAGE ?= lyonfnal/c67allinea
 NAME ?= c67allinea
 
 # We need to add the license directory

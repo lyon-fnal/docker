@@ -1,5 +1,5 @@
-IMAGE ?= c67cvmfs
-NAME ?= gm2-dev-cvmfs
+IMAGE ?= lyonfnal/c67cvmfs
+NAME ?= c67cvmfs
 
 ARGS_PRIVILEGED := --privileged
 
