@@ -1,6 +1,6 @@
 # Ignore these files...
 
-*bash_history
+docker_bash_history*
 
 runtime/*
 
