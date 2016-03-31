@@ -69,6 +69,7 @@ help-top:
 	@echo ' NAME=<container name>'
 	@echo ' VOL=<full path within container to directory accessible to other containers>'
 	@echo ' VOLS_FROM=<container(s) from which to obtain volumes>'
+	@echo ' EXTRA_DOCKER_RUN_FLAGS=<other flags that you want>'
 	@echo ' '
 	@echo 'EXAMPLES:'
 	@echo '  make NAME=my-analysis VOL=/home/gm2/ana-v1 dev-shell'
@@ -228,6 +229,14 @@ build-all:
 #	make -C c67Allinea build
 #	make -C c67Spack build
 
+push-all:
+#	docker push lyonfnal/c67base
+	docker push lyonfnal/c67cvmfs
+	docker push lyonfnal/c67cvmfsnfsserver
+	docker push lyonfnal/c67cvmfsnfsclient
+	docker push lyonfnal/c67igprof
+
+
 # Create the Xhyve VM (for OSX with xhyve installed)
 create-machine-xhyve :
 	docker-machine create --driver xhyve \
@@ -299,7 +308,7 @@ archive: check-archive-is-set
 	@docker run --rm --volumes-from $(ARCHIVE) -v $(PWD):/backup \
 	                -v $(PWD)/archive_description:/container/description \
 									-v $(PWD)/archive_log:/container/log \
-									c67base \
+									lyonfnal/c67base \
 									tar cvzf /backup/$(ARCHIVE).tgz $(ARCHIVE_VOLS)
 	@rm -f archive_log archive_description
 	@echo WROTE TO $(ARCHIVE).tgz
