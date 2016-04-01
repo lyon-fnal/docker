@@ -35,7 +35,7 @@ Running a virtual machine means running an application that emulaes a computer w
 
 Problems with this straight Virtual Machine approach are:
 
-<MORE NEEDS TO BE WRITTEN>
+-- more needs to be written here --
 
 
 # Quick Start
@@ -121,13 +121,13 @@ Note that the directory will be owned by root. You will need to change ownership
 sudo chown gm2 <dir>
 ```
 
-You can also map directories on your host into the container. By using the syntax `VOL=pathOnHost:pathInContainer` . For example,
+You can also map directories on your host into the container, by using the syntax `VOL=pathOnHost:pathInContainer` . For example,
 
 ```
 make VOL=$PWD/archive/oldStuff:/home/gm2/oldStuff dev-shell
 ```
 
-You can load volumes from other containers (created by default or with `VOL=` into your new container with the `VOLS_FROM` option. Specify existing container names separated by spaces. For example,
+You can load volumes from other containers (created by default or with `VOL=`) into your new container with the `VOLS_FROM` option. Specify existing container names separated by spaces. For example,
 
 ```
 make VOLS_FROM=old_container dev-shell
@@ -143,11 +143,11 @@ Along with `dev-shell`, you can use the following:
 * `allinea-shell`: X11 + CVMFS + Allinea Forge (you'll need a license file)
 * `igprof-shell`: X11 + CVMFS + Igprof profiler
 
-Just replace `dev-shell` with the other shell in the examples above. 
+Just replace `dev-shell` with the other shell name in the examples above. 
 
 ## Archiving containers
 
-You can archive a container, which means that container information, the container log, and data in any docker volumes, will be written to a tar file. 
+You can archive a container, which means that container information, the container log, and data in any docker volumes, will be written to a tar file. The tar file is the name of the container with the `.tgz` extension.  
 
 ```
 make ARCHIVE=container_name archive
