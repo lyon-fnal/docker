@@ -8,7 +8,7 @@ MAINTAINER Adam Lyon <lyon@fnal.gov>
 #    Nice things to have
 RUN yum update -y && \
     yum install -y \
-          perl expat-devel glibc-devel gdb git \
+          perl expat-devel glibc-devel gdb time git \
           freetype-devel libXpm-devel libXmu-devel mesa-libGL-devel mesa-libGLU-devel \
           libjpeg libpng \
           tar zip xz bzip2 patch \
