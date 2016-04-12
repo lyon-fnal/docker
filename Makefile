@@ -76,6 +76,10 @@ help-top:
 	@echo '  make NAME=my-other-analysis VOL=/home/gm2/ana-v1.1 igprof-shell'
 	@echo '  make NAME=study VOLS_FROM="my-analysis my-other-analysis" plain-shell'
 	@echo ' '
+	@echo 'EXPERIMENTAL:'
+	@echo '  make mu-shell            -- Make a shell from mu_1_17_07_base'
+	@echo '  make analysis-shell      -- Make a shell from myjupyter'
+	@echo ' '
 	@echo 'Do "make help-basic" to see other more basic functionality'
 	@echo 'Do "make help-machines" to see docker-machine releated functionality'
 	@echo 'Do "make help-monitoring" to see monitoring related functionality'
@@ -109,11 +113,20 @@ help-monitoring:
 
 # ---- Higher order functionality
 
+mac-cvmfs:
+	make -C c67CvmfsNfsServer mac-cvmfs
+
 cvmfs-start:
 	make -C c67CvmfsNfsServer cvmfs bkg shell
 
 dev-shell:
 	make -C c67CvmfsNfsClient x11 shell
+
+mu-shell:
+	make -C mu_1_17_07_base x11 shell
+
+analysis-shell:
+	make -C myjupyter x11 shell
 
 single-analysis-shell:
 	make -C c67CvmfsNfsClient EXTRA_DOCKER_RUN_FLAGS="--memory=1g" x11 shell
@@ -246,12 +259,14 @@ create-machine-xhyve :
 		$(NEW_DOCKER_MACHINE_NAME)
 
 # Create the virtualbox machinecreate-machine-vbox :
+# Note that I used to do --virtualbox-host-dns-resolver but that breaks reverse DNS
+#   needed by kx509 and xrootd
 create-machine-vbox :
 	docker-machine create --driver virtualbox \
 	 	--virtualbox-cpu-count=4 \
 		--virtualbox-memory=8192 \
+		--virtualbox-disk-size="50000" \
 		--virtualbox-dns-proxy \
-		--virtualbox-host-dns-resolver \
 		$(NEW_DOCKER_MACHINE_NAME)
 	# Do not stop the VM on low battery warning
 	VBoxManage setextradata "$(NEW_DOCKER_MACHINE_NAME)" "VBoxInternal2/SavestateOnBatteryLow" 0

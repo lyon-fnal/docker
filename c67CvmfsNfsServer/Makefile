@@ -8,6 +8,10 @@ help-cvmfs-nfs-server:
 	@echo "   Additonal option in front of shell from CVMFS"
 	@echo "      make bkg shell   -- Run cvmfs NFS server"
 
+do-mac-cvmfs:
+	sudo mount -t nfs -o resvport $$(docker-machine ip $(DOCKER_MACHINE_NAME)):/cvmfs/gm2.opensciencegrid.org /cvmfs/gm2.opensciencegrid.org
+	sudo mount -t nfs -o resvport $$(docker-machine ip $(DOCKER_MACHINE_NAME)):/cvmfs/fermilab.opensciencegrid.org /cvmfs/fermilab.opensciencegrid.org
+
 cvmfs-nfs-server: do-cvmfs
 
 help: |help-top help-cvmfs-nfs-server

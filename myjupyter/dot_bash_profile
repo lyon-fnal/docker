@@ -1,0 +1,6 @@
+# Check if we have CVMFS loaded
+if [ !  -d "/cvmfs/gm2.opensciencegrid.org" ]; then
+  bash -C /usr/local/bin/startCvmfsNfsClient.sh
+fi
+
+source /usr/local/bin/startenv.sh
