@@ -8,13 +8,13 @@
 NEW_DOCKER_MACHINE_NAME ?= default
 
 LOCAL_VOLUME ?= $(HOME)
-NAME ?= aContainer
 DOCKER_HISTORY_FILE ?= $(PWD)/docker_bash_history_$(NAME)
 BUILD_ARGS ?=
 EXTRA_DOCKER_RUN_FLAGS ?=
 EXTRA_RUN_INSTRUCTIONS ?=
-VOL ?= /home/gm2/$(NAME)
+VOLS ?= /home/gm2/$(NAME)
 VOLS_FROM ?=
+INTERACTIVE ?= "-ti"
 
 ARGS_RM ?=
 ARGS_BKG ?=
@@ -23,7 +23,7 @@ ARGS_PRIVILEGED ?=
 
 GRAFANA_DIR ?= $(PWD)/runtime/grafana
 
-# Deal with differences in the docker-machine (virtualbox vs xhyve)
+# Deal with differences in the docker-machine (virtualbox vs xhyve vs Docker for mac)
 ifdef DOCKER_MACHINE_NAME
 DM_DRIVER := $(shell docker-machine inspect --format='{{.DriverName}}' ${DOCKER_MACHINE_NAME})
 NETWORK_INTERFACE := unknown
@@ -32,14 +32,17 @@ NETWORK_INTERFACE := bridge100
 else ifeq ($(DM_DRIVER),virtualbox)
 NETWORK_INTERFACE := vboxnet0
 endif
+else
+NETWORK_INTERFACE := en0
 endif
 
-# Deal with VOL and VOLS_FROM
-ifdef VOL
-EXTRA_DOCKER_RUN_FLAGS += -v $(VOL)
+# Deal with VOLS and VOLS_FROM
+# VOLS can be space separated like VOLS="/tmp:/home/gm2 /home/gm2/notebook"
+ifdef VOLS
+EXTRA_DOCKER_RUN_FLAGS += $(foreach v,$(VOLS),-v $(v))
 endif
 
-# VOLS_FROM can be a space separeated list like VOLS_FROM="abc def"
+# VOLS_FROM can be a space separated list like VOLS_FROM="abc def"
 ifdef VOLS_FROM
 EXTRA_DOCKER_RUN_FLAGS += $(foreach vf,$(VOLS_FROM),--volumes-from $(vf))
 endif
@@ -60,15 +63,23 @@ help-top:
 	@echo ' make allinea-shell  -- Make a development shell container that gets CVMFS, X11 and Allinea'
 	@echo ' make igprof-shell   -- Make a development shell container that gets CVMFS, X11 and Igprof'
 	@echo ' make plain-shell    -- Make a shell container without CVMFS, but with X11'
+	@echo ' make analysis-shell -- Make a shell container from jupyterRoot with X11'
+	@echo
+	@echo ' make jupyterConda-start    -- Start conda jupyter notebook'
+	@echo ' make jupyterConda-stop     -- Stop and remove conda jupyter notebook'
+	@echo ' make jupyterRoot-start     -- Start root jupyer notebook'
+	@echo ' make jupyterRoot-stop      -- Stop and remove root jupyer notebook'
+	@echo
 	@echo ' make clean          -- Stop and remove the most recently started container'
+	@echo ' make clean-exited   -- Remove all exited containers'
 	@echo ' '
 	@echo ' make ARCHIVE=container archive -- Archive volumes and log from a container to a tar file'
 	@echo ' '
 	@echo 'IMPORTANT OPTIONS:'
 	@echo ' '
 	@echo ' NAME=<container name>'
-	@echo ' VOL=<full path within container to directory accessible to other containers>'
-	@echo ' VOLS_FROM=<container(s) from which to obtain volumes>'
+	@echo ' VOLS=<-v specifications (leave off -v), multiple space separated>'
+	@echo ' VOLS_FROM=<container(s) from which to obtain volumes, multiple space separated>'
 	@echo ' EXTRA_DOCKER_RUN_FLAGS=<other flags that you want>'
 	@echo ' '
 	@echo 'EXAMPLES:'
@@ -104,7 +115,7 @@ help-machines:
 	@echo ' make create-machine-vbox       -- Create a virtualbox VM on OSX'
 	@echo ' make create-machine-vbox-vdi   -- Create a virtualbox VM on OSX but with a VDI disk (shrinkable)'
 	@echo ' make shrink-disk-vbox          -- Shrink the VDI disk on the virtualbox VM'
-	@echo ' make fix-clock-skew-xhyve      -- Resync the clock on the xhyve VM - fixes clock skew errors'
+	@echo ' make fix-clock-skew            -- Resync the clock on the xhyve VM - fixes clock skew errors'
 	@echo ' '
 	@echo 'Set NEW_DOCKER_MACHINE_NAME accordingly. Default is "default"'
 
@@ -126,10 +137,20 @@ mu-shell:
 	make -C mu_1_17_07_base x11 shell
 
 analysis-shell:
-	make -C myjupyter x11 shell
+	$(eval NAME ?= c67analysis)
+	make -C c67JupyterRoot x11 shell
 
-single-analysis-shell:
-	make -C c67CvmfsNfsClient EXTRA_DOCKER_RUN_FLAGS="--memory=1g" x11 shell
+jupyterConda-start:
+	make -C c67JupyterConda jupyter
+
+jupyterConda-stop:
+	make -C c67JupyterConda jupyter-stop
+
+jupyterRoot-start:
+	make -C c67JupyterRoot jupyter
+
+jupyterRoot-stop:
+	make -C c67JupyterRoot jupyter-stop
 
 plain-shell:
 	make -C c67Base x11 shell
@@ -177,17 +198,20 @@ do-rm:
 
 do-x11:
 	$(eval DID_X11 := yes)
-	$(eval MYHOSTIP := $(shell ifconfig $(NETWORK_INTERFACE)  | grep inet | cut -d' ' -f 2))
+	echo $(NETWORK_INTERFACE)
+	$(eval MYHOSTIP := $(shell ifconfig $(NETWORK_INTERFACE)  | grep inet | tail -1 | cut -d' ' -f 2))
+	echo $(MYHOSTIP)
 	$(eval ARGS_DISPLAY := -e DISPLAY=$(MYHOSTIP):0)
-	$(eval DOCKER_VM_IP := $(shell docker-machine ip $(DOCKER_MACHINE_NAME) ))
+#	$(eval DOCKER_VM_IP := $(shell docker-machine ip $(DOCKER_MACHINE_NAME) ))
 	-killall socat
 	open -a Xquartz
-	socat TCP-LISTEN:6000,reuseaddr,fork,range=$(DOCKER_VM_IP):255.255.255.0 UNIX-CLIENT:\"$$DISPLAY\" &
+#	socat TCP-LISTEN:6000,reuseaddr,fork,range=$(DOCKER_VM_IP):255.255.255.0 UNIX-CLIENT:\"$$DISPLAY\" &
+	socat TCP-LISTEN:6000,reuseaddr,fork UNIX-CLIENT:\"$$DISPLAY\" &
 	# Must set the range option, else our port 6000 is open to everybody!
 
 do-docker-run: check-image-is-set
 	# Run the container
-	-docker run $(ARGS_RM) $(ARGS_BKG) -ti \
+	-docker run $(ARGS_RM) $(ARGS_BKG) $(INTERACTIVE) \
 	  --name=$(NAME) \
 		$(ARGS_DISPLAY) $(ARGS_PRIVILEGED) \
 		-v $(DOCKER_HISTORY_FILE):/home/gm2/.bash_history \
@@ -230,6 +254,9 @@ shell: | do-bash-history do-docker-run do-post-run
 
 clean: | do-clean-recent-container do-kill-socat
 
+clean-exited:
+	docker rm `docker ps -f status=exited -q`
+
 # ---- Making machines
 
 # Build all of the images
@@ -266,7 +293,6 @@ create-machine-vbox :
 	 	--virtualbox-cpu-count=4 \
 		--virtualbox-memory=8192 \
 		--virtualbox-disk-size="50000" \
-		--virtualbox-dns-proxy \
 		$(NEW_DOCKER_MACHINE_NAME)
 	# Do not stop the VM on low battery warning
 	VBoxManage setextradata "$(NEW_DOCKER_MACHINE_NAME)" "VBoxInternal2/SavestateOnBatteryLow" 0
@@ -303,7 +329,7 @@ shrink-disk-vbox:
 	docker-machine start $(DOCKER_MACHINE_NAME)
 
 # Fix clock-skew errors
-fix-clock-skew-xhyve :
+fix-clock-skew :
 	docker-machine ssh $(DOCKER_MACHINE_NAME) "sudo date -u -D %s --set $(shell date -u +%s)"
 
 check-archive-is-set:
