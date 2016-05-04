@@ -27,16 +27,16 @@ memstore_limit = 1000000             #maximum number of series commands stored i
    threshold = "0.5%"
 
    [deduplication.task]
-   interval = "15s"
+   interval = "2s"
    threshold = "1%"
 
    [deduplication.filesystem]
-   interval = "15s"
+   interval = "2s"
    threshold = "1%"
 
 [cadvisor]
 store_major_numbers  = false       #store statistics for devices with all available major numbers
 store_user_cgroups   = false       #store statistics for "user" cgroups (for example: docker-host/user.*)
-property_interval    = "20s"        #container property update interval. Should be &gt;= housekeeping_interval
+property_interval    = "2s"        #container property update interval. Should be &gt;= housekeeping_interval
 sampling_interval    = "1s"        #interval at which series data is sampled. By default set to housekeeping_interval. Should be &gt;= housekeeping_interval
-docker_host          = "dinghy"    #hostname of the machine where docker daemon is running. By default set to 'docker-host'. Needs to be set manually because cadvisor container doesn't know hostname of the docker machine.
+docker_host          = "default"    #hostname of the machine where docker daemon is running. By default set to 'docker-host'. Needs to be set manually because cadvisor container doesn't know hostname of the docker machine.

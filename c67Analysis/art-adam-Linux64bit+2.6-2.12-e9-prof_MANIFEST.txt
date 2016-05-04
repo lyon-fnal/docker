@@ -1,0 +1,10 @@
+ups                  v5_2_0          ups-5.2.0-Linux64bit+2.6-2.12.tar.bz2                        -f Linux64bit+2.6-2.12
+cmake                v3_3_2          cmake-3.3.2-slf6-x86_64.tar.bz2                              -f Linux64bit+2.6-2.12
+gcc                  v4_9_3          gcc-4.9.3-slf6-x86_64.tar.bz2                                -f Linux64bit+2.6-2.12
+clhep                v2_3_1_1        clhep-2.3.1.1-slf6-x86_64-e9-prof.tar.bz2                    -f Linux64bit+2.6-2.12     -q e9:prof
+fftw                 v3_3_4		       fftw-3.3.4-slf6-x86_64-prof.tar.bz2                          -f Linux64bit+2.6-2.12     -q prof
+libxml2              v2_9_2	         libxml2-2.9.2-slf6-x86_64-prof.tar.bz2                       -f Linux64bit+2.6-2.12     -q prof
+sqlite               v3_08_10_02     sqlite-3.08.10.02-slf6-x86_64.tar.bz2                        -f Linux64bit+2.6-2.12
+python               v2_7_10	       python-2.7.10-slf6-x86_64.tar.bz2                            -f Linux64bit+2.6-2.12
+xrootd               v3_3_4d      	 xrootd-3.3.4d-slf6-x86_64-e9-prof.tar.bz2                    -f Linux64bit+2.6-2.12     -q e9:prof
+root                 v6_06_02 	     root-6.06.02-slf6-x86_64-e9-prof.tar.bz2                     -f Linux64bit+2.6-2.12     -q e9:prof      

@@ -1,0 +1,11 @@
+{
+ "language": "c++",
+ "argv": [
+    "/usr/local/bin/root-notebook-launcher.sh",
+    "{connection_file}", 
+    "v6_06_02",
+    "e9:prof",
+    "import ROOT;ROOT.toCpp()"
+  ],
+ "display_name": "ROOT C++"
+}

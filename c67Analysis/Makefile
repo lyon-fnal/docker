@@ -1,0 +1,22 @@
+IMAGE ?= lyonfnal/c67analysis
+NAME ?= c67analysis
+
+ARGS_PRIVILEGED := --privileged
+
+NFS_SERVER_IP := $(shell docker inspect --format '{{.NetworkSettings.IPAddress}}' cvmfs_nfs_server)
+
+ifeq ($(NFS_SERVER_IP),)
+NFS_SERVER_IP := localhost
+EXTRA_DOCKER_FLAGS := --net=host
+endif
+
+EXTRA_DOCKER_RUN_FLAGS += -e NFS_SERVER_IP=$(NFS_SERVER_IP) -p 8888:8888 -p 8889:8889
+
+jupyter: | do-jupyter do-docker-run
+
+do-jupyter:
+	$(eval INTERACTIVE :=  -dt)
+	$(eval CMD := /usr/local/bin/tini -- /usr/local/bin/startJupyter.sh)
+	$(eval NAME := jupyter)
+
+include ../Makefile

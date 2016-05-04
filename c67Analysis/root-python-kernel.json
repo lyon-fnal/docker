@@ -1,0 +1,11 @@
+{
+ "language": "python",
+ "argv": [
+    "/usr/local/bin/root-notebook-launcher.sh",
+    "{connection_file}",
+    "v6_06_02",
+    "e9:prof",
+    "import ROOT;"
+  ],
+ "display_name": "ROOT python"
+}

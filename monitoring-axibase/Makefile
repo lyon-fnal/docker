@@ -10,7 +10,6 @@ monitoring-start:
 		-p 8088:8088 \
 		-p 8443:8443 \
 		-p 8081:8081 \
-		-p 8084:8084 \
 		-p 8082:8082/udp \
 		-e AXIBASE_USER_PASSWORD=abcdefgh \
 		-e ATSD_USER_NAME=user \
@@ -18,6 +17,9 @@ monitoring-start:
 		-h atsd \
 		--name=atsd \
 		axibase/atsd:latest
+
+	@echo "Waiting for atsd to start up"
+	sleep 90
 
 	docker run \
 	  --volume=/:/rootfs:ro \
