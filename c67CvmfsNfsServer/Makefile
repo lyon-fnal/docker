@@ -22,8 +22,8 @@ EXTRA_DOCKER_RUN_FLAGS += -p 111:111 -p 2049:2049 -p 892:892 -p 32769:32769/udp 
 
 EXTRA_DOCKER_RUN_FLAGS += --restart=unless-stopped
 
-EXTRA_DOCKER_RUN_INSTRUCTIONS += "You can mount cvmfs on your host with (Mac) \n" \
-                                 "sudo mount -t nfs -o resvport $$(docker-machine ip $(DOCKER_MACHINE_NAME)):/cvmfs/gm2.opensciencegrid.org /cvmfs/gm2.opensciencegrid.org\n" \
-																 "sudo mount -t nfs -o resvport $$(docker-machine ip $(DOCKER_MACHINE_NAME)):/cvmfs/fermilab.opensciencegrid.org /cvmfs/fermilab.opensciencegrid.org"
+#EXTRA_DOCKER_RUN_INSTRUCTIONS += "You can mount cvmfs on your host with (Mac) \n" \
+                                 #"sudo mount -t nfs -o resvport $$(docker-machine ip $(DOCKER_MACHINE_NAME)):/cvmfs/gm2.opensciencegrid.org /cvmfs/gm2.opensciencegrid.org\n" \
+																 #"sudo mount -t nfs -o resvport $$(docker-machine ip $(DOCKER_MACHINE_NAME)):/cvmfs/fermilab.opensciencegrid.org /cvmfs/fermilab.opensciencegrid.org"
 
 include ../c67Cvmfs/Makefile
