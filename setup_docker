@@ -50,7 +50,7 @@ d_startSocat () {
     [[ -n "${MYHOSTIP}" ]] || \
       { echo "ERROR: Unable to ascertain host IP!" 1>&2; return;}
 
-    export D_X11="-e DISPLAY=${MYHOSTIP}:0"
+    export D_X11="-e DISPLAY=${D_HOSTLOOPBACKIP}:0"
 
     # Start X11 if necessary
     if ! ps -ef | grep XQuartz | grep -vq grep; then
@@ -61,12 +61,10 @@ d_startSocat () {
     # Start socat if necessary
     if ! ps -ef | grep socat | grep -vq grep; then
       socat -L"${LOCKFILE}" \
-            TCP-LISTEN:6000,reuseaddr,fork,range=${MYHOSTIP}/32 \
+            TCP-LISTEN:6000,reuseaddr,fork,range=${D_HOSTLOOPBACKIP}/32 \
             UNIX-CLIENT:\"$DISPLAY\" &
       echo "Started socat"
     fi
-
-    echo "socat is running. Use \$D_X11 for X11 forwarding"
   fi
 }
 
@@ -97,18 +95,18 @@ d_serve_cvmfs () {
 
   di_start_cvmfs_volume
 
-  export D_CVMFS="--privileged -e NFS_SERVER_IP=$(docker inspect --format '{{.NetworkSettings.IPAddress}}' cvmfs_nfs_server)"
-
   if di_pred_no_cvmfs_server; then
     docker rm cvmfs_nfs_server
     if docker run -d -it --privileged --volumes-from cvmfs_cache --name cvmfs_nfs_server lyonfnal/c67cvmfsnfsserver; then
-      echo "Started cvmfs_nfs_server - ctrl-c to exit log watch"
-      docker logs -f cvmfs_nfs_server
+      echo "Started cvmfs_nfs_server - check docker logs -f cvmfs_nfs_server before running a CVMFS NFS client"
     else
       echo "Could not start cvmfs_nfs_server. Perhaps docker rm cvmfs_nfs_server"
       return 1
     fi
   fi
+
+  export D_CVMFS="--privileged -e NFS_SERVER_IP=$(docker inspect --format '{{.NetworkSettings.IPAddress}}' cvmfs_nfs_server)"
+
 }
 
 d_h () {
@@ -118,6 +116,10 @@ d_h () {
 }
 
 d_ps () {
+  docker ps -a --format "table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.RunningFor}} ago\t{{.Image}}"
+}
+
+d_pss () {
   docker ps -sa --format "table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.RunningFor}} ago\t{{.Image}}"
 }
 
@@ -206,6 +208,7 @@ di_setupHostLoopback
 
 export D_HOSTVOL="-v /Users/${USER}:/Users/${USER}"
 
+echo "Configurations--"
 make_with_extras DEVSHELL lyonfnal/c67cvmfsnfsclient "$D_X11 $D_CVMFS $D_HOSTVOL" \
                 "Development centos 6.7 shell with CVMFS and X11"
 
@@ -219,5 +222,14 @@ make_with_extras PLAINSHELL lyonfnal/c67base "$D_X11 $D_HOSTVOL" \
                 "Plain centos 6.7 shell with only X11"
 
 echo " "
-echo "Use d_h <history file name> ; docker run ... \$D_H ... to handle history file"
+echo "e.g. docker run --name=MyAnalysis \$D_DEVSHELL"
+
+echo " "
+echo "Use d_h <bash history file name> ; docker run ... \$D_H ... to save bash history file"
+echo " "
+echo "Components---"
+echo "Add \$D_CVMFS to add CVMFS environment variables to a cvmfs nfs client container"
+echo "ADD \$D_X11 to add X11 forwarding for containers with X11"
+echo "ADD \$D_HOSTVOL to add -v /Users/${USER}:/Users/${USER}"
 echo "Add \$D_HOSTLB to access host loopback with docker.local"
+echo "Note - Host loopback is $D_HOSTLOOPBACKIP"
