@@ -137,7 +137,6 @@ mu-shell:
 	make -C mu_1_17_07_base x11 shell
 
 analysis-shell:
-	$(eval NAME ?= c67analysis)
 	make -C c67JupyterRoot x11 shell
 
 jupyterConda-start:
@@ -187,6 +186,7 @@ do-build: check-image-is-set
 do-bash-history:
 	# We need to create the history file, else docker run makes it a directory
 	touch $(DOCKER_HISTORY_FILE)
+	$(eval EXTRA_DOCKER_RUN_FLAGS += -v $(DOCKER_HISTORY_FILE):/home/gm2/.bash_history )
 
 do-bkg:
 	$(eval DID_BKG := yes)
@@ -214,7 +214,6 @@ do-docker-run: check-image-is-set
 	-docker run $(ARGS_RM) $(ARGS_BKG) $(INTERACTIVE) \
 	  --name=$(NAME) \
 		$(ARGS_DISPLAY) $(ARGS_PRIVILEGED) \
-		-v $(DOCKER_HISTORY_FILE):/home/gm2/.bash_history \
 		-v $(LOCAL_VOLUME):$(LOCAL_VOLUME) \
 		$(EXTRA_DOCKER_RUN_FLAGS) \
 		$(IMAGE) \
@@ -329,8 +328,11 @@ shrink-disk-vbox:
 	docker-machine start $(DOCKER_MACHINE_NAME)
 
 # Fix clock-skew errors
+#fix-clock-skew :
+#	docker-machine ssh $(DOCKER_MACHINE_NAME) "sudo date -u -D %s --set $(shell date -u +%s)"
+
 fix-clock-skew :
-	docker-machine ssh $(DOCKER_MACHINE_NAME) "sudo date -u -D %s --set $(shell date -u +%s)"
+	docker run --rm --privileged centos:6.7  date -s "`date`"
 
 check-archive-is-set:
 	@if [ -z $(ARCHIVE) ] ; then \
