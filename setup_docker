@@ -1,0 +1,223 @@
+# Setup docker stuff
+# Be sure to SOURCE this file
+
+LOCKFILE=/tmp/${USER}_docker-socat.pid
+export D_HOSTLOOPBACKIP=192.168.50.1
+
+scriptDir () {
+  SOURCE="${BASH_SOURCE[0]}"
+  while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+    DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+  done
+  export SCRIPTDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+}
+
+d_killSocat () {
+  if [[ -f "$LOCKFILE" ]]; then
+    echo "INFO: Removing old instance of socat at pid $(cat "${LOCKFILE}")" 1>&2;
+    kill -TERM $(cat "${LOCKFILE}")
+    sleep 2
+    if [[ -f "${LOCKFILE}" ]]; then
+      cat 1>&2 <<EOF
+ERROR: Unable to remove socat lockfile "${LOCKFILE}" for pid $(cat "${LOCKFILE}")
+          Investigate and kill / remove manually as appropriate.
+EOF
+      return
+    fi
+    else
+      echo 'Killed socat'
+  fi
+}
+
+d_startSocat () {
+
+  # Do we have socat?
+  if [[ "$MACHTYPE" == *-darwin* ]]; then # OSX
+    type -t socat > /dev/null || \
+      { echo "ERROR: Unable to find socat -- try brew install socat"; return; }
+
+    # Need to figure out options to network
+    # Are we running inside a VM?
+    export MYHOSTIP=$(NETWORK_INTERFACE 2>/dev/null)
+    interface=$(route -n get 0.0.0.0 | sed -ne '/interface/s&^.* &&p')  # e.g. en0
+    [[ -n "${MYHOSTIP}" ]] || \
+      MYHOSTIP=$(ifconfig "${interface}" 2>/dev/null | \
+                    grep inet | tail -1 | cut -d' ' -f 2)
+
+    # Uh oh
+    [[ -n "${MYHOSTIP}" ]] || \
+      { echo "ERROR: Unable to ascertain host IP!" 1>&2; return;}
+
+    export D_X11="-e DISPLAY=${MYHOSTIP}:0"
+
+    # Start X11 if necessary
+    if ! ps -ef | grep XQuartz | grep -vq grep; then
+      open -a XQuartz
+      echo "Started X11"
+    fi
+
+    # Start socat if necessary
+    if ! ps -ef | grep socat | grep -vq grep; then
+      socat -L"${LOCKFILE}" \
+            TCP-LISTEN:6000,reuseaddr,fork,range=${MYHOSTIP}/32 \
+            UNIX-CLIENT:\"$DISPLAY\" &
+      echo "Started socat"
+    fi
+
+    echo "socat is running. Use \$D_X11 for X11 forwarding"
+  fi
+}
+
+
+# Start CVMFS cache volume container
+di_pred_no_cvmfs_volume () {
+  if docker ps -a | grep cvmfs_cache -q; then
+    return 1
+  fi
+  return 0
+}
+
+di_start_cvmfs_volume () {
+  if di_pred_no_cvmfs_volume; then
+    docker create -v /var/cvmfs/cache --name cvmfs_cache lyonfnal/c67cvmfs /bin/true
+    echo 'Creating cvmfs_cache data container'
+  fi
+}
+
+di_pred_no_cvmfs_server () {
+  if docker ps | grep cvmfs_nfs_server -q; then
+    return 1
+  fi
+  return 0
+}
+
+d_serve_cvmfs () {
+
+  di_start_cvmfs_volume
+
+  export D_CVMFS="--privileged -e NFS_SERVER_IP=$(docker inspect --format '{{.NetworkSettings.IPAddress}}' cvmfs_nfs_server)"
+
+  if di_pred_no_cvmfs_server; then
+    docker rm cvmfs_nfs_server
+    if docker run -d -it --privileged --volumes-from cvmfs_cache --name cvmfs_nfs_server lyonfnal/c67cvmfsnfsserver; then
+      echo "Started cvmfs_nfs_server - ctrl-c to exit log watch"
+      docker logs -f cvmfs_nfs_server
+    else
+      echo "Could not start cvmfs_nfs_server. Perhaps docker rm cvmfs_nfs_server"
+      return 1
+    fi
+  fi
+}
+
+d_h () {
+  name=docker_bash_history_$1
+  touch $name
+  export D_H="-v $PWD/$name:/home/gm2/.bash_history"
+}
+
+d_ps () {
+  docker ps -sa --format "table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.RunningFor}} ago\t{{.Image}}"
+}
+
+export D_HOSTLB="--add-host=docker.local:${D_HOSTLOOPBACKIP}"
+
+di_setupHostLoopback () {
+  if ! ifconfig lo0 | grep -q ${D_HOSTLOOPBACKIP}; then
+    echo "Running sudo ifconfig lo0 alias ${D_HOSTLOOPBACKIP}"
+    sudo ifconfig lo0 alias ${D_HOSTLOOPBACKIP}
+  fi
+}
+
+d_startMonitoring () {
+
+  docker run \
+    -d \
+    -p 5022:22 \
+    -p 8088:8088 \
+    -p 8443:8443 \
+    -p 8081:8081 \
+    -p 8082:8082/udp \
+    -e AXIBASE_USER_PASSWORD=redhat \
+    -e ATSD_USER_NAME=redhat \
+    -e ATSD_USER_PASSWORD=redhat \
+    -h atsd \
+    --name=atsd \
+    axibase/atsd:stable
+
+  # What is atsd's IP address?
+
+  #echo "Waiting for atsd to start up"
+  #sleep 90
+
+  docker run \
+    --volume=/:/rootfs:ro \
+    --volume=/var/run:/var/run:rw \
+    --volume=/sys:/sys:ro \
+    --volume=/var/lib/docker/:/var/lib/docker:ro \
+    --publish=9090:8080 \
+    --detach=true \
+    --name=cadvisor \
+    --link atsd:atsd \
+    axibase/cadvisor:latest \
+    --storage_driver=atsd \
+    --storage_driver_user=redhat \
+    --storage_driver_password=redhat  \
+    --storage_driver_atsd_url=http://atsd:8088 \
+    --storage_driver_atsd_write_host=atsd:8082 \
+    --storage_driver_atsd_write_protocol=udp \
+    --storage_driver_atsd_docker_host="`hostname`" \
+    --storage_driver_atsd_property_interval=15s \
+    --housekeeping_interval=15s \
+    --storage_driver_buffer_duration=15s
+
+  echo Check logs with docker logs -f atsd and wait for start \(takes awhile\)
+  echo Look at instananeous monitoring from CAdivsor on port 9090
+  echo Look at historical monitoring on port 8088
+
+}
+
+d_stopMonitoring () {
+  docker stop atsd cadvisor
+	docker rm atsd cadvisor
+}
+
+d_clean () {
+  docker rm `docker ps -f status=exited -q`
+}
+
+make_with_extras () {
+  n=$1
+  image=$2
+  extras=$3
+  doc=$4
+  export D_${n}_BASE="-it ${image}"
+  export D_${n}="${extras} -it ${image}"
+  echo -e "D_${n}\t\t${doc}"
+}
+
+# Startup
+d_startSocat
+d_serve_cvmfs
+di_setupHostLoopback
+
+# Setups
+
+export D_HOSTVOL="-v /Users/${USER}:/Users/${USER}"
+
+make_with_extras DEVSHELL lyonfnal/c67cvmfsnfsclient "$D_X11 $D_CVMFS $D_HOSTVOL" \
+                "Development centos 6.7 shell with CVMFS and X11"
+
+make_with_extras IGPROFSHELL lyonfnal/c67igprof "$D_X11 $D_CVMFS $D_HOSTVOL" \
+                "IGPROF centos 6.7 shell with CVMFS and X11"
+
+make_with_extras MUSHELL lyonfnal/mu_1_17_07_base "$D_X11 $D_CVMFS $D_HOSTVOL" \
+                "Development centos 6.7 shell with release mu_1_17_07, CVMFS and X11"
+
+make_with_extras PLAINSHELL lyonfnal/c67base "$D_X11 $D_HOSTVOL" \
+                "Plain centos 6.7 shell with only X11"
+
+echo " "
+echo "Use d_h <history file name> ; docker run ... \$D_H ... to handle history file"
+echo "Add \$D_HOSTLB to access host loopback with docker.local"
