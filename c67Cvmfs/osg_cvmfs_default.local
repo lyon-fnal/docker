@@ -9,3 +9,6 @@ CVMFS_HTTP_PROXY=DIRECT
 CVMFS_QUOTA_LIMIT=20000
 CVMFS_CACHE_BASE=/var/cache/cvmfs
 CVMFS_NFS_SOURCE=yes
+
+# Need to add the URL (new version of CVMFS needs to find it here?)
+CVMFS_SERVER_URL="http://cvmfs-s1bnl.opensciencegrid.org:8000/cvmfs/@fqrn@;http://cvmfs-s1fnal.opensciencegrid.org:8000/cvmfs/@fqrn@;http://cvmfs-s1goc.opensciencegrid.org:8000/cvmfs/@fqrn@"
