@@ -38,15 +38,13 @@ Problems with this straight Virtual Machine approach are:
 -- more needs to be written here --
 
 
-# Quick Start
+# Installation
 
 Clone this github repository with
 
 ```bash
 git clone https://github.com/lyon-fnal/docker-gm2.git
 ```
-
-You need to run the `make` command below sitting in the directory that was created (e.g. `docker-gm2`). 
 
 You need to have `docker` installed on your machine. The easiest way is to download the `docker toolbox` from https://www.docker.com/products/docker-toolbox . 
 
@@ -58,105 +56,64 @@ To pop X-windows on a Mac, you will need `socat`. The easiest way to install it 
 brew install socat
 ```
 
-## Getting help
-Type `make` to see the main functions. 
+## Starting up
 
-## Starting CVMFS
-You should first get CVMFS running (eventually, this will be automatic, but not at this point). Do,
-
-```bash
-make cvmfs-start
-```
-
-You should do
+Open a terminal window and do,
 
 ```
-docker logs -f cvmfs_nfs_server
+source /path/to/docker-gm2/setup_docker
 ```
 
-and watch and wait for 
+You can run this script safely multiple times from different terminal windows. It will,
+
+* If not already done, set up an alias IP address for your loopback network interface (see ifconfig lo0). The default alias is 192.168.50.1 . This alias will allow docker containers to easily connect to localhost on your host
+ 
+* Start socat and XQuartz if they are not already running 
+
+* Create the common CVMFS cache volume container if it does not exist already
+
+* If not already running, start the `cvmfs_nfs_server` docker container to serve CVMFS to other containers
+
+* Setup environment variables for help with running docker commands, see below
+
+## Starting containers
+
+There are a lot of things to remember when starting containers. The `setup_docker` script above will define several environment variables to help you. 
+
+### Configurations
+There are several "out of the box" configurations you can run. See the output of `setup_docker` for a list. These environment variables are enough to `docker run` the container without other arguments. For example, to start a centos 6.7 development shell with `/Users/${USER}` mapped into the container, X11 ready, and CVMFS mounted, do
 
 ```
-Starting NFS services:                                     [  OK  ]
-Starting NFS mountd:                                       [  OK  ]
-Starting NFS daemon:                                       [  OK  ]
-Starting RPC idmapd:                                       [  OK  ]
+docker run $D_DEVSHELL
 ```
 
-Note that the following message:
+In practice, you should always give other options, like 
 
 ```
-FATAL: Could not load /lib/modules/4.1.19-boot2docker/modules.dep: No such file or directory
+docker run --name=myAnalysis -v /home/gm2/myAnalysis $D_DEVSHELL
 ```
 
-is benign and can be ignored.
-
-## Running development containers
-
-Your current directory must be where you cloned `docker-gm2` (your current directory should have the top level `Makefile`). 
-
-Once CMVFS is up, you can run development containers. 
-
-```bash
-make dev-shell
-```
-
-Runs a development shell. `/cvmfs` will be mounted and X11 forwarding will be set up. Also, if you are on a Mac, then `/Users` is accessible from within the container. You will be the `gm2` user in `/home/gm2`. There are several options that you can set with make variables (they may be combined)...
-
-Specify a name for the container...
+### Saving bash history
+It is often useful to retain your bash history and perhaps use it in future containers. The `d_h <history filename>` bash function creates a file in the current directory to hold the bash history and sets the `$D_H` environment variable with the needed `docker run` options to map it onto `.bash_history` in the container. For example,
 
 ```
-make NAME=myContainerName dev-shell
+d_h analysisBashHistory ; docker run $D_H --name=myAnalysis -v /home/gm2/myAnalysis $D_DEVSHELL
 ```
 
-Specify a volume in the container. The `VOL` variable can specify a docker volume within the container. A docker volume persists for the life of the container (whether the container is running or has exited). Once the container is removed, then the volume is removed with it. If you don't specify `VOL`, then a default volume will be created with the name of the container. 
+### Docker run components
+
+The `setup_docker` script sets environment variables from which you can build a more generic `docker run` command. For example, if you have an image called `myImage`, and you want X11 to work (assuming the image has X11 installed in it), you can do
 
 ```
-make VOL=/home/gm2/myruns dev-shell
+docker run ... $D_X11 myImage
 ```
 
-Note that the directory will be owned by root. You will need to change ownership by running within the container,
+A list of the component variables is printed when you run `setup_docker`. 
 
-```
-sudo chown gm2 <dir>
-```
+## Listing containers
 
-You can also map directories on your host into the container, by using the syntax `VOL=pathOnHost:pathInContainer` . For example,
+The `docker ps` command gets hard to read when a container exposes lots of ports. The command `d_ps` removes that column, making for an easy to read list. `d_pss` adds sizes to the list (can be slow). 
 
-```
-make VOL=$PWD/archive/oldStuff:/home/gm2/oldStuff dev-shell
-```
-
-You can load volumes from other containers (created by default or with `VOL=`) into your new container with the `VOLS_FROM` option. Specify existing container names separated by spaces. For example,
-
-```
-make VOLS_FROM=old_container dev-shell
-make VOLS_FROM="old_container1 old_contianer2" dev-shell
-```
-
-## Other shells
-
-Along with `dev-shell`, you can use the following:
-
-* `plain-shell`: Just X11 started
-* `dev-shell`: X11 + CVMFS mounted
-* `allinea-shell`: X11 + CVMFS + Allinea Forge (you'll need a license file)
-* `igprof-shell`: X11 + CVMFS + Igprof profiler
-
-Just replace `dev-shell` with the other shell name in the examples above. 
-
-## Archiving containers
-
-You can archive a container, which means that container information, the container log, and data in any docker volumes, will be written to a tar file. The tar file is the name of the container with the `.tgz` extension.  
-
-```
-make ARCHIVE=container_name archive
-```
-
-## More stuff to write
-
-* Using Xcode with a container
-* Monitoring
 
 
 
