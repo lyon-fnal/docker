@@ -212,8 +212,8 @@ echo "Configurations--"
 make_with_extras DEVSHELL lyonfnal/c67cvmfsnfsclient "$D_X11 $D_CVMFS $D_HOSTVOL" \
                 "Development centos 6.7 shell with CVMFS and X11"
 
-make_with_extras IGPROFSHELL lyonfnal/c67igprof "$D_X11 $D_CVMFS $D_HOSTVOL" \
-                "IGPROF centos 6.7 shell with CVMFS and X11"
+make_with_extras IGPROFSHELL lyonfnal/c67igprof "$D_X11 $D_CVMFS $D_HOSTVOL -p 127.0.0.1:8900:8900" \
+                "IGPROF centos 6.7 shell with CVMFS and X11 and port 8900 forwarded"
 
 make_with_extras MUSHELL lyonfnal/mu_1_17_07_base "$D_X11 $D_CVMFS $D_HOSTVOL" \
                 "Development centos 6.7 shell with release mu_1_17_07, CVMFS and X11"
@@ -222,7 +222,7 @@ make_with_extras PLAINSHELL lyonfnal/c67base "$D_X11 $D_HOSTVOL" \
                 "Plain centos 6.7 shell with only X11"
 
 echo " "
-echo "e.g. docker run --name=MyAnalysis \$D_DEVSHELL"
+echo "e.g. docker run --name=MyAnalysis -v /home/gm2/myAnalysis \$D_DEVSHELL"
 
 echo " "
 echo "Use d_h <bash history file name> ; docker run ... \$D_H ... to save bash history file"
