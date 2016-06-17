@@ -97,8 +97,10 @@ docker run --name=myAnalysis -v /home/gm2/myAnalysis $D_DEVSHELL
 It is often useful to retain your bash history and perhaps use it in future containers. The `d_h <history filename>` bash function creates a file in the current directory to hold the bash history and sets the `$D_H` environment variable with the needed `docker run` options to map it onto `.bash_history` in the container. For example,
 
 ```
-d_h analysisBashHistory ; docker run $D_H --name=myAnalysis -v /home/gm2/myAnalysis $D_DEVSHELL
+d_h analysis ; docker run $D_H --name=myAnalysis -v /home/gm2/myAnalysis $D_DEVSHELL
 ```
+
+That will make a file called `analysis.bash_history` in your current directory mapped to the container's `.bash_history`. 
 
 ### Docker run components
 
