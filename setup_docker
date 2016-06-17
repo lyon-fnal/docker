@@ -116,11 +116,11 @@ d_h () {
 }
 
 d_ps () {
-  docker ps -a --format "table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.RunningFor}} ago\t{{.Image}}"
+  docker ps -a --format "table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.RunningFor}} ago\t{{.Image}}" |  (read -r; printf "%s\n" "$REPLY"; sort -k3,5 -r)
 }
 
 d_pss () {
-  docker ps -sa --format "table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.RunningFor}} ago\t{{.Image}}"
+  docker ps -sa --format "table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.RunningFor}} ago\t{{.Image}}" |  (read -r; printf "%s\n" "$REPLY"; sort -k3,5 -r)
 }
 
 export D_HOSTLB="--add-host=docker.local:${D_HOSTLOOPBACKIP}"

@@ -66,7 +66,7 @@ source /path/to/docker-gm2/setup_docker
 
 You can run this script safely multiple times from different terminal windows. It will,
 
-* If not already done, set up an alias IP address for your loopback network interface (see ifconfig lo0). The default alias is 192.168.50.1 . This alias will allow docker containers to easily connect to localhost on your host
+* If not already done, set up an alias IP address for your loopback network interface (see `ifconfig lo0`). The default alias is `192.168.50.1` . This alias will allow docker containers to easily connect to localhost on your host
  
 * Start socat and XQuartz if they are not already running 
 
