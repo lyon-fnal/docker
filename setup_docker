@@ -144,7 +144,7 @@ d_webdav () {
   fi
 
   # Get the container name
-  cname=$(docker inspect --format='{{.Name}}' 6f | sed 's#/##')
+  cname=$(docker inspect --format='{{.Name}}' $c | sed 's#/##')
 
   wname=${cname}-webdav
 
