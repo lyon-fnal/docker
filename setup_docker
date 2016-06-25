@@ -31,24 +31,12 @@ EOF
   fi
 }
 
-d_startSocat () {
+di_startSocat () {
 
   # Do we have socat?
   if [[ "$MACHTYPE" == *-darwin* ]]; then # OSX
     type -t socat > /dev/null || \
       { echo "ERROR: Unable to find socat -- try brew install socat"; return; }
-
-    # Need to figure out options to network
-    # Are we running inside a VM?
-    export MYHOSTIP=$(NETWORK_INTERFACE 2>/dev/null)
-    interface=$(route -n get 0.0.0.0 | sed -ne '/interface/s&^.* &&p')  # e.g. en0
-    [[ -n "${MYHOSTIP}" ]] || \
-      MYHOSTIP=$(ifconfig "${interface}" 2>/dev/null | \
-                    grep inet | tail -1 | cut -d' ' -f 2)
-
-    # Uh oh
-    [[ -n "${MYHOSTIP}" ]] || \
-      { echo "ERROR: Unable to ascertain host IP!" 1>&2; return;}
 
     export D_X11="-e DISPLAY=${D_HOSTLOOPBACKIP}:0"
 
@@ -91,7 +79,7 @@ di_pred_no_cvmfs_server () {
   return 0
 }
 
-d_serve_cvmfs () {
+di_serve_cvmfs () {
 
   di_start_cvmfs_volume
 
@@ -130,6 +118,52 @@ di_setupHostLoopback () {
     echo "Running sudo ifconfig lo0 alias ${D_HOSTLOOPBACKIP}"
     sudo ifconfig lo0 alias ${D_HOSTLOOPBACKIP}
   fi
+}
+
+di_setup_safe_network () {
+   # Create a network with com.docker.network.bridge.host_binding_ipv4 set to 127.0.0.1
+   #   - So by default exposed ports only answer to the host's localhost IP and not exposed
+   #     to the general internet
+   if ! docker network ls | awk '{print $2}' | grep -q safe; then
+     echo 'Creating "safe" network'
+     docker network create -o "com.docker.network.bridge.host_binding_ipv4"="127.0.0.1" safe
+   fi
+}
+
+d_webdav () {
+  # Create a webdav container that serves volumes from another container
+  c=$1
+
+  # Get list of volumes for container
+  vols=$(docker inspect --format '{{ range .Mounts }}{{ if eq .Driver "local" }}:{{ .Destination }}{{ end }}{{ end }}' $c  | sed 's/://')
+
+  # Are there any volumes?
+  if [ -z "$vols" ]; then
+    echo "Container $c has no volumes; nothing to export"
+    return 1
+  fi
+
+  # Get the container name
+  cname=$(docker inspect --format='{{.Name}}' 6f | sed 's#/##')
+
+  wname=${cname}-webdav
+
+  # Run the webdav service
+  wc=$(docker run -d --name=$wname --net=safe -p 80 --volumes-from=$c -e VOLPATHS="$vols" lyonfnal/c67webdav)
+  wcs="${wc:0:3}"
+
+  echo "Running webdav service $wname($wcs) exporting volumes $vols from $cname"
+  p=$(docker port $wname | cut -d':' -f2)
+
+  # Print out mounts
+  IFS=':' read -r -a array <<< "$vols"
+  for element in "${array[@]}"
+  do
+      volname=$(basename "$element")
+      echo "Mount $element using http://localhost:${p}/${volname}"
+  done
+  echo "To remove running webdav server, issue docker rm -f $wcs"
+
 }
 
 d_startMonitoring () {
@@ -189,7 +223,7 @@ d_clean () {
   docker rm `docker ps -f status=exited -q`
 }
 
-make_with_extras () {
+di_make_with_extras () {
   n=$1
   image=$2
   extras=$3
@@ -199,26 +233,35 @@ make_with_extras () {
   echo -e "D_${n}\t\t${doc}"
 }
 
+
+
+####### SCRIPT EXECUTION STARTS HERE ########
+
+echo " "
+echo ">>>> setup_docker <<<<<"
+echo " "
+
 # Startup
-d_startSocat
-d_serve_cvmfs
+di_startSocat
+di_serve_cvmfs
 di_setupHostLoopback
+di_setup_safe_network
 
 # Setups
 
 export D_HOSTVOL="-v /Users/${USER}:/Users/${USER}"
 
 echo "Configurations--"
-make_with_extras DEVSHELL lyonfnal/c67cvmfsnfsclient "$D_X11 $D_CVMFS $D_HOSTVOL" \
+di_make_with_extras DEVSHELL lyonfnal/c67cvmfsnfsclient "$D_X11 $D_CVMFS $D_HOSTVOL -P" \
                 "Development centos 6.7 shell with CVMFS and X11"
 
-make_with_extras IGPROFSHELL lyonfnal/c67igprof "$D_X11 $D_CVMFS $D_HOSTVOL -p 127.0.0.1:8900:8900" \
+di_make_with_extras IGPROFSHELL lyonfnal/c67igprof "$D_X11 $D_CVMFS $D_HOSTVOL -p 127.0.0.1:8900:8900 -P" \
                 "IGPROF centos 6.7 shell with CVMFS and X11 and port 8900 forwarded"
 
-make_with_extras MUSHELL lyonfnal/mu_1_17_07_base "$D_X11 $D_CVMFS $D_HOSTVOL" \
+di_make_with_extras MUSHELL lyonfnal/mu_1_17_07_base "$D_X11 $D_CVMFS $D_HOSTVOL" \
                 "Development centos 6.7 shell with release mu_1_17_07, CVMFS and X11"
 
-make_with_extras PLAINSHELL lyonfnal/c67base "$D_X11 $D_HOSTVOL" \
+di_make_with_extras PLAINSHELL lyonfnal/c67base "$D_X11 $D_HOSTVOL -P" \
                 "Plain centos 6.7 shell with only X11"
 
 echo " "
@@ -232,4 +275,11 @@ echo "Add \$D_CVMFS to add CVMFS environment variables to a cvmfs nfs client con
 echo "ADD \$D_X11 to add X11 forwarding for containers with X11"
 echo "ADD \$D_HOSTVOL to add -v /Users/${USER}:/Users/${USER}"
 echo "Add \$D_HOSTLB to access host loopback with docker.local"
+echo 'Add --net=safe to use network that exposes ports only to 127.0.0.1'
 echo "Note - Host loopback is $D_HOSTLOOPBACKIP"
+echo " "
+echo "Commands---"
+echo "d_ps  - Pretty container listing"
+echo "d_pss - Pretty container listing with sizes (slow)"
+echo " "
+echo "d_webdav <container> - Export volumes in container via webdav"

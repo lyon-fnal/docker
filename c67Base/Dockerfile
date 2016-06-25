@@ -8,6 +8,8 @@ MAINTAINER Adam Lyon <lyon@fnal.gov>
 #    Nice things to have
 RUN yum update -y && \
     yum install -y \
+          nc \
+          redhat-lsb-core \
           perl expat-devel glibc-devel gdb time git \
           freetype-devel libXpm-devel libXmu-devel mesa-libGL-devel mesa-libGLU-devel \
           libjpeg libpng \
@@ -40,8 +42,8 @@ RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.
 ENV UPS_FLAVOR_OVERRIDE "-H Linux64bit+2.6-2.12"
 ENV UPS_OVERRIDE $UPS_FLAVOR_OVERRIDE
 
-# Create a gm2 user (UID and GID should match the Mac user), add to suoders, and switch to it
-ENV USERNAME gm2
+# Create a me user (UID and GID should match the Mac user), add to suoders, and switch to it
+ENV USERNAME me
 
 # Pass in the user ID :and the group ID to use
 ARG MYUID
