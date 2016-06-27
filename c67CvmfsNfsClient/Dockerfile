@@ -8,7 +8,7 @@ RUN yum -y install nfs-utils nfs-utils-lib && \
 
 COPY startCvmfsNfsClient.sh /usr/local/bin
 
-USER gm2
+USER me
 
 # Mount CVMFS from NFS on entry
 # (See http://www.markbetz.net/2014/03/17/docker-run-startup-scripts-then-exit-to-a-shell/)

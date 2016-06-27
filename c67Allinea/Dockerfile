@@ -19,7 +19,7 @@ RUN mkdir -p /home/root/allinea && \
     cd /home/root && \
     rm -rf allinea
 
-USER gm2
-WORKDIR /home/gm2
+USER me
+WORKDIR /home/me
 RUN echo 'export PATH=/opt/allinea/forge/bin:${PATH}' > setup_allinea && \
     echo 'export PATH=/opt/allinea/forge/bin:${PATH}' >> .bash_profile

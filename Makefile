@@ -265,15 +265,17 @@ build-all:
 	make -C c67CvmfsNfsServer build
 	make -C c67CvmfsNfsClient build
 	make -C c67Igprof build
+	make -C c67WebDav build
 #	make -C c67Allinea build
 #	make -C c67Spack build
 
 push-all:
-#	docker push lyonfnal/c67base
+	docker push lyonfnal/c67base
 	docker push lyonfnal/c67cvmfs
 	docker push lyonfnal/c67cvmfsnfsserver
 	docker push lyonfnal/c67cvmfsnfsclient
 	docker push lyonfnal/c67igprof
+	docker push lyonfnal/c67webdav
 
 
 # Create the Xhyve VM (for OSX with xhyve installed)

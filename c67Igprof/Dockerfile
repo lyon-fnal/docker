@@ -39,5 +39,5 @@ RUN wget http://www.hpl.hp.com/research/linux/atomic_ops/download/libatomic_ops-
 # Expose a port for a igprof web server
 EXPOSE 8900
 
-USER gm2
-WORKDIR /home/gm2
+USER me
+WORKDIR /home/me

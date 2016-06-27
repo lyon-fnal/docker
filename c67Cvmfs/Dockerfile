@@ -15,7 +15,7 @@ RUN mkdir /cvmfs/gm2.opensciencegrid.org
 RUN mkdir /cvmfs/fermilab.opensciencegrid.org
 COPY startCvmfs.sh /usr/local/bin
 
-USER gm2
+USER me
 
 # Mount CVMFS on entry
 # (See http://www.markbetz.net/2014/03/17/docker-run-startup-scripts-then-exit-to-a-shell/)

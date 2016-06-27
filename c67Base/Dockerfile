@@ -23,6 +23,7 @@ RUN wget http://ftp.scientificlinux.org/linux/fermi/slf6.7/x86_64/os/RPM-GPG-KEY
     rpm --import RPM-GPG-KEY-sl && \
     rm -f RPM-GPG-KEY-sl && \
     yum install -y krb5-fermi-getcert --enablerepo=slf && \
+    yum install -y cigetcert --enablerepo=slf-security && \
     yum clean all
 
 # Install the Fermilab krb5.conf
