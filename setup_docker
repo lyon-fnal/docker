@@ -75,7 +75,7 @@ di_serve_cvmfs () {
 
   if di_pred_no_cvmfs_server; then
     docker rm cvmfs_nfs_server
-    if docker run -d -it --privileged --volumes-from cvmfs_cache --name cvmfs_nfs_server lyonfnal/c67cvmfsnfsserver; then
+    if docker run -d -it $D_TZ --privileged --volumes-from cvmfs_cache --name cvmfs_nfs_server lyonfnal/c67cvmfsnfsserver; then
       echo "Started cvmfs_nfs_server - check docker logs -f cvmfs_nfs_server before running a CVMFS NFS client"
     else
       echo "Could not start cvmfs_nfs_server. Perhaps docker rm cvmfs_nfs_server"
@@ -120,12 +120,20 @@ di_setup_safe_network () {
    fi
 }
 
+di_containerNameForID () {
+  echo $(docker inspect --format='{{.Name}}' $1 | sed 's#/##')
+}
+
+di_volumesInContainer () {
+  echo $(docker inspect --format '{{ range .Mounts }}{{ if eq .Driver "local" }}:{{ .Destination }}{{ end }}{{ end }}' $1  | sed 's/://')
+}
+
 d_webdav () {
   # Create a webdav container that serves volumes from another container
   c=$1
 
   # Get list of volumes for container
-  vols=$(docker inspect --format '{{ range .Mounts }}{{ if eq .Driver "local" }}:{{ .Destination }}{{ end }}{{ end }}' $c  | sed 's/://')
+  vols=$(di_volumesInContainer $c)
 
   # Are there any volumes?
   if [ -z "$vols" ]; then
@@ -134,15 +142,15 @@ d_webdav () {
   fi
 
   # Get the container name
-  cname=$(docker inspect --format='{{.Name}}' $c | sed 's#/##')
+  cname=$(di_containerNameForID $c)
 
   wname=${cname}-webdav
 
   # Run the webdav service
-  wc=$(docker run -d --name=$wname --net=safe -p 80 --volumes-from=$c -e VOLPATHS="$vols" lyonfnal/c67webdav)
+  wc=$(docker run -d --name=$wname --net=safe -p 80 $D_TZ --volumes-from=$c -e VOLPATHS="$vols" lyonfnal/c67webdav)
   wcs="${wc:0:3}"
 
-  echo "Running webdav service $wname($wcs) exporting volumes $vols from $cname"
+  echo "Running webdav server container $wname($wcs) exporting volumes $vols from $cname"
   p=$(docker port $wname | cut -d':' -f2)
 
   # Print out mounts
@@ -153,6 +161,7 @@ d_webdav () {
       echo "Mount $element using http://localhost:${p}/${volname}"
   done
   echo "To remove running webdav server, issue docker rm -f $wcs"
+  echo "If git claims that all files are modified, then fix with 'git config core.filemode false'"
 
 }
 
@@ -223,7 +232,11 @@ di_make_with_extras () {
   echo -e "D_${n}\t\t${doc}"
 }
 
+di_localTimeZone() {
 
+  # From http://stackoverflow.com/questions/13238409/in-os-x-getting-the-timezone-in-php-or-from-a-command-prompt-in-terminal
+  export D_TZ="-e TZ=$(ls -l /etc/localtime|/usr/bin/cut -d'/' -f7,8)"
+}
 
 ####### SCRIPT EXECUTION STARTS HERE ########
 
@@ -232,6 +245,7 @@ echo ">>>> setup_docker <<<<<"
 echo " "
 
 # Startup
+di_localTimeZone
 di_startSocat
 di_serve_cvmfs
 di_setupHostLoopback
@@ -242,16 +256,16 @@ di_setup_safe_network
 export D_HOSTVOL="-v /Users/${USER}:/Users/${USER}"
 
 echo "Configurations--"
-di_make_with_extras DEVSHELL lyonfnal/c67cvmfsnfsclient "$D_X11 $D_CVMFS $D_HOSTVOL -P" \
+di_make_with_extras DEVSHELL lyonfnal/c67cvmfsnfsclient "$D_X11 $D_CVMFS $D_TZ $D_HOSTVOL" \
                 "Development centos 6.7 shell with CVMFS and X11"
 
-di_make_with_extras IGPROFSHELL lyonfnal/c67igprof "$D_X11 $D_CVMFS $D_HOSTVOL -p 127.0.0.1:8900:8900 -P" \
+di_make_with_extras IGPROFSHELL lyonfnal/c67igprof "--net=safe $D_X11 $D_CVMFS $D_TZ $D_HOSTVOL -p 900:8900" \
                 "IGPROF centos 6.7 shell with CVMFS and X11 and port 8900 forwarded"
 
-di_make_with_extras MUSHELL lyonfnal/mu_1_17_07_base "$D_X11 $D_CVMFS $D_HOSTVOL" \
+di_make_with_extras MUSHELL lyonfnal/mu_1_17_07_base "$D_X11 $D_CVMFS $D_TZ $D_HOSTVOL" \
                 "Development centos 6.7 shell with release mu_1_17_07, CVMFS and X11"
 
-di_make_with_extras PLAINSHELL lyonfnal/c67base "$D_X11 $D_HOSTVOL -P" \
+di_make_with_extras PLAINSHELL lyonfnal/c67base "$D_X11 $D_TZ $D_HOSTVOL" \
                 "Plain centos 6.7 shell with only X11"
 
 echo " "
@@ -265,6 +279,7 @@ echo "Add \$D_CVMFS to add CVMFS environment variables to a cvmfs nfs client con
 echo "ADD \$D_X11 to add X11 forwarding for containers with X11"
 echo "ADD \$D_HOSTVOL to add -v /Users/${USER}:/Users/${USER}"
 echo "Add \$D_HOSTLB to access host loopback with docker.local"
+echo "Add \$D_TZ to add local timezone to environment"
 echo 'Add --net=safe to use network that exposes ports only to 127.0.0.1'
 echo "Note - Host loopback is $D_HOSTLOOPBACKIP"
 echo " "
