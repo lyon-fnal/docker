@@ -253,6 +253,7 @@ di_setup_safe_network
 
 # Setups
 
+
 export D_HOSTVOL="-v /Users/${USER}:/Users/${USER}"
 
 echo "Configurations--"
