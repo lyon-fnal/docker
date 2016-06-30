@@ -1,3 +1,4 @@
+#!/bin/bash
 # Setup docker stuff
 # Be sure to SOURCE this file
 
@@ -98,7 +99,7 @@ d_ps () {
 }
 
 d_pss () {
-  docker ps -sa --format "table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.RunningFor}} ago\t{{.Image}}" |  (read -r; printf "%s\n" "$REPLY"; sort -k3,5 -r)
+  docker ps -sa --format "table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.RunningFor}} ago\t{{.Image}}\t{{.Size}}" |  (read -r; printf "%s\n" "$REPLY"; sort -k3,5 -r)
 }
 
 export D_HOSTLB="--add-host=docker.local:${D_HOSTLOOPBACKIP}"
@@ -238,6 +239,12 @@ di_localTimeZone() {
   export D_TZ="-e TZ=$(ls -l /etc/localtime|/usr/bin/cut -d'/' -f7,8)"
 }
 
+d_fixTimeSkew() {
+  echo "Currently it's $(docker run --rm centos:6.7 date)"
+  newTime=$(docker run --rm --privileged centos:6.7  date -s "`date`")
+  echo "Now it's       $newTime"
+}
+
 ####### SCRIPT EXECUTION STARTS HERE ########
 
 echo " "
@@ -253,20 +260,22 @@ di_setup_safe_network
 
 # Setups
 
+export D_HOSTVOL="-v ${HOME}:${HOME}"
 
-export D_HOSTVOL="-v /Users/${USER}:/Users/${USER}"
 
 echo "Configurations--"
-di_make_with_extras DEVSHELL lyonfnal/c67cvmfsnfsclient "$D_X11 $D_CVMFS $D_TZ $D_HOSTVOL" \
+D_STDOPTS="$D_X11 $D_TZ $D_HOSTVOL $D_HOSTLB"
+
+di_make_with_extras DEVSHELL lyonfnal/c67cvmfsnfsclient "$D_CVMFS $D_STDOPTS" \
                 "Development centos 6.7 shell with CVMFS and X11"
 
-di_make_with_extras IGPROFSHELL lyonfnal/c67igprof "--net=safe $D_X11 $D_CVMFS $D_TZ $D_HOSTVOL -p 900:8900" \
+di_make_with_extras IGPROFSHELL lyonfnal/c67igprof "--net=safe $D_CVMFS $D_STDOPTS -p 900:8900" \
                 "IGPROF centos 6.7 shell with CVMFS and X11 and port 8900 forwarded"
 
-di_make_with_extras MUSHELL lyonfnal/mu_1_17_07_base "$D_X11 $D_CVMFS $D_TZ $D_HOSTVOL" \
+di_make_with_extras MUSHELL lyonfnal/mu_1_17_07_base "$D_CVMFS $D_STDOPTS" \
                 "Development centos 6.7 shell with release mu_1_17_07, CVMFS and X11"
 
-di_make_with_extras PLAINSHELL lyonfnal/c67base "$D_X11 $D_TZ $D_HOSTVOL" \
+di_make_with_extras PLAINSHELL lyonfnal/c67base "$D_STDOPTS" \
                 "Plain centos 6.7 shell with only X11"
 
 echo " "
@@ -287,5 +296,5 @@ echo " "
 echo "Commands---"
 echo "d_ps  - Pretty container listing"
 echo "d_pss - Pretty container listing with sizes (slow)"
-echo " "
 echo "d_webdav <container> - Export volumes in container via webdav"
+echo "d_fixTimeSkew - Fix time skew problems"
