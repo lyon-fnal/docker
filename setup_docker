@@ -5,6 +5,7 @@
 SOCAT_LOCKFILE=/tmp/${USER}_docker-socat.pid
 export D_HOSTLOOPBACKIP=192.168.50.1
 
+
 d_killSocat () {
   if [[ -f "$SOCAT_LOCKFILE" ]]; then
     echo "INFO: Removing old instance of socat at pid $(cat "${SOCAT_LOCKFILE}")" 1>&2;
@@ -277,6 +278,9 @@ di_make_with_extras MUSHELL lyonfnal/mu_1_17_07_base "$D_CVMFS $D_STDOPTS" \
 
 di_make_with_extras PLAINSHELL lyonfnal/c67base "$D_STDOPTS" \
                 "Plain centos 6.7 shell with only X11"
+
+di_make_with_extras RSTUDIOLAR lyonfnal/rstudio-daily-larsoftobj "-d --net=safe -P $D_STDOPTS" \
+                "Run LarsoftObj RStudio - check ports for 8787 mapping"
 
 echo " "
 echo "e.g. docker run --name=MyAnalysis -v /home/gm2/myAnalysis \$D_DEVSHELL"
