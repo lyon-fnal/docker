@@ -1,3 +1,6 @@
+# NOTE:
+I no longer use nor update these images. See lyon-fnal/devenv instead. 
+
 # Docker for HEP Code Development and Analysis
 
 **Abstract:** Development and execution environments are difficult to create and maintain. The traditional way of using a machine configured by administrators or yourself is giving way to more agile environments, of which the current state-of-the-art are software *containers*. Today, *Docker* is the most popular implementation of a container system. This document and repository offer an environment for Muon *g-2* code development and execution using Docker containers allowing for ease of setup, reproducibility, and compatibility on practically any modern host computer. 
